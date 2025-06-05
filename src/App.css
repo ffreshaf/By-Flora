@@ -13,10 +13,10 @@
   border-radius: 50px;
 }
 .logo:hover {
-  filter: drop-shadow(0 0 2em #f7b500aa);
+  filter: drop-shadow(0 0 2em #ffd7a8);
 }
 .logo.react:hover {
-  filter: drop-shadow(0 0 2em #ff9100aa);
+  filter: drop-shadow(0 0 2em #ffd69faa);
 }
 
 @keyframes logo-spin {
@@ -32,10 +32,6 @@
   a:nth-of-type(2) .logo {
     animation: logo-spin infinite 20s linear;
   }
-}
-
-.card {
-  padding: 2em;
 }
 
 .read-the-docs {
