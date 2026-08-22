@@ -9,6 +9,7 @@ function DogForm({ initialDog, onSave }) {
   const [weightKg, setWeightKg] = useState(initialDog?.weightKg || '');
   const [size, setSize] = useState(initialDog?.size || 'medium');
   const [activityLevel, setActivityLevel] = useState(initialDog?.activityLevel || 'moderate');
+  const [kcalPer100g, setKcalPer100g] = useState(initialDog?.kcalPer100g || 350);
   const [error, setError] = useState('');
 
   const handleSubmit = (e) => {
@@ -33,7 +34,8 @@ function DogForm({ initialDog, onSave }) {
       ageMonths: Number(ageMonths),
       weightKg: Number(weightKg),
       size,
-      activityLevel
+      activityLevel,
+      kcalPer100g: Number(kcalPer100g)
     });
   };
 
@@ -91,6 +93,19 @@ function DogForm({ initialDog, onSave }) {
             <option key={a} value={a}>{a.charAt(0).toUpperCase() + a.slice(1)}</option>
           ))}
         </select>
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="kcal">Food energy (kcal per 100g)</label>
+        <input
+            id="kcal"
+            type="number"
+            min="0"
+            value={kcalPer100g}
+            onChange={(e) => setKcalPer100g(e.target.value)}
+            placeholder="e.g. 350"
+        />
+        <small>Check your dog food bag — usually listed as kcal/100g or kcal/cup.</small>
       </div>
 
       {error && <p className="form-error">{error}</p>}

@@ -13,7 +13,7 @@ function App() {
   }
 
   return (
-    <>
+    <div className="app-shell">
       <header>
         <h1>Welcome to the By Flora project</h1>
         <img src="/By-Flora.png" alt="By Flora Logo" className={`logo ${spinning ? 'spinning' : ''}`} onClick={handleLogoClick} />
@@ -33,7 +33,7 @@ function App() {
       <p className="read-the-docs">
         Click on the Flora logo to learn more
       </p>
-    </>
+    </div>
   )
 }
 

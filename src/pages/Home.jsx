@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { addDog, getAllDogs, updateDog } from '../db/dogs.js';
-import  DogForm  from '../components/DogForm.jsx';
+import DogForm from '../components/DogForm.jsx';
+import PassportStamp from '../components/PassportStamp.jsx';
+import { calculateDailyFood } from '../utils/food.js';
+import './Home.css';
 
 function Home() {
   const [dog, setDog] = useState(null);
@@ -27,29 +30,31 @@ function Home() {
     await loadDog();
   }
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  if (loading) return <p>Loading...</p>;
 
   if (!dog || editing) {
     return (
-        <div>
-            <h2>{dog ? 'Edit profile' : "Let's set up your dog profile"}</h2>
-            <DogForm initialDog={dog} onSave={handleSave} />
-        </div>
+      <div className="care-card">
+        <h2>{dog ? 'Edit profile' : "Let's set up your dog's profile"}</h2>
+        <DogForm initialDog={dog} onSave={handleSave} />
+      </div>
     );
   }
 
+  const { dailyKcal, gramsPerDay } = calculateDailyFood(dog);
+
   return (
-    <div>
+    <div className="care-card">
+      <PassportStamp name={dog.name} />
       <h2>{dog.name}</h2>
-      <ul>
-        <li>Age: {dog.ageMonths} months</li>
-        <li>Weight: {dog.weightKg} kg</li>
-        <li>Size: {dog.size}</li>
-        <li>Activity level: {dog.activityLevel}</li>
+      <ul className="stat-list">
+        <li>Age <span>{dog.ageMonths} mo</span></li>
+        <li>Weight <span>{dog.weightKg} kg</span></li>
+        <li>Size <span>{dog.size}</span></li>
+        <li>Activity <span>{dog.activityLevel}</span></li>
+        <li>Daily food <span>{gramsPerDay}g / {dailyKcal} kcal</span></li>
       </ul>
-      <button onClick={() => setEditing(true)}>Edit profile</button>
+      <button className="btn btn-primary" onClick={() => setEditing(true)}>Edit profile</button>
     </div>
   );
 }
