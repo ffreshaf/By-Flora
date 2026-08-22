@@ -118,3 +118,9 @@
   cursor: pointer;
   margin-top: 4px;
 }
+
+.care-note {
+  font-size: 0.8rem;
+  color: var(--sage);
+  margin: -8px 0 16px;
+}

@@ -3,6 +3,7 @@ import { addDog, getAllDogs, updateDog } from '../db/dogs.js';
 import DogForm from '../components/DogForm.jsx';
 import PassportStamp from '../components/PassportStamp.jsx';
 import { calculateDailyFood } from '../utils/food.js';
+import { calculateExerciseMinutes } from '../utils/exercise.js';
 import './Home.css';
 
 function Home() {
@@ -42,6 +43,7 @@ function Home() {
   }
 
   const { dailyKcal, gramsPerDay } = calculateDailyFood(dog);
+  const { minutesPerDay, minutesPerSession, sessions, note } = calculateExerciseMinutes(dog);
 
   return (
     <div className="care-card">
@@ -53,6 +55,8 @@ function Home() {
         <li>Size <span>{dog.size}</span></li>
         <li>Activity <span>{dog.activityLevel}</span></li>
         <li>Daily food <span>{gramsPerDay}g / {dailyKcal} kcal</span></li>
+        <li>Exercise <span>{minutesPerDay} min / day</span></li>
+        {note && <p className="care-note">{note}</p>}
       </ul>
       <button className="btn btn-primary" onClick={() => setEditing(true)}>Edit profile</button>
     </div>
