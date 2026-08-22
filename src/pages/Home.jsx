@@ -42,22 +42,40 @@ function Home() {
     );
   }
 
-  const { dailyKcal, gramsPerDay } = calculateDailyFood(dog);
-  const { minutesPerDay, minutesPerSession, sessions, note } = calculateExerciseMinutes(dog);
+  const { gramsPerDay, mealsPerDay, gramsPerMeal } = calculateDailyFood(dog);
+  const { minutesPerDay, sessions, minutesPerSession, note } = calculateExerciseMinutes(dog);
 
   return (
     <div className="care-card">
       <PassportStamp name={dog.name} />
       <h2>{dog.name}</h2>
+
+      <div className="highlight-grid">
+        <div className="highlight-card">
+          <span className="highlight-label">Food</span>
+          <span className="highlight-value">{mealsPerDay}× {gramsPerMeal}g</span>
+          <span className="highlight-detail">{gramsPerDay}g total per day</span>
+        </div>
+        <div className="highlight-card">
+          <span className="highlight-label">Exercise</span>
+          <span className="highlight-value">
+            {sessions ? `${sessions}× ${minutesPerSession}min` : `${minutesPerDay} min`}
+          </span>
+          <span className="highlight-detail">
+            {sessions ? `${minutesPerDay} min total per day` : 'in one walk or split up'}
+          </span>
+        </div>
+      </div>
+
+      {note && <p className="care-note">{note}</p>}
+
       <ul className="stat-list">
         <li>Age <span>{dog.ageMonths} mo</span></li>
         <li>Weight <span>{dog.weightKg} kg</span></li>
         <li>Size <span>{dog.size}</span></li>
         <li>Activity <span>{dog.activityLevel}</span></li>
-        <li>Daily food <span>{gramsPerDay}g / {dailyKcal} kcal</span></li>
-        <li>Exercise <span>{minutesPerDay} min / day</span></li>
-        {note && <p className="care-note">{note}</p>}
       </ul>
+
       <button className="btn btn-primary" onClick={() => setEditing(true)}>Edit profile</button>
     </div>
   );

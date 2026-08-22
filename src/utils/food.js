@@ -7,6 +7,12 @@ const ADULT_FACTORS = {
   'very active': 2.5
 };
 
+function getMealsPerDay(ageMonths) {
+  if (ageMonths < 4) return 4;
+  if (ageMonths < 12) return 3;
+  return 2;
+}
+
 export function calculateDailyFood(dog) {
   const { weightKg, ageMonths, activityLevel, kcalPer100g } = dog;
 
@@ -21,11 +27,15 @@ export function calculateDailyFood(dog) {
     factor = ADULT_FACTORS[activityLevel] ?? ADULT_FACTORS.moderate;
   }
 
-  const der = rer * factor; // daily kcal needed
-  const gramsPerDay = (der / kcalPer100g) * 100;
+  const der = rer * factor;
+  const gramsPerDay = Math.round((der / kcalPer100g) * 100);
+  const mealsPerDay = getMealsPerDay(ageMonths);
+  const gramsPerMeal = Math.round(gramsPerDay / mealsPerDay);
 
   return {
     dailyKcal: Math.round(der),
-    gramsPerDay: Math.round(gramsPerDay)
+    gramsPerDay,
+    mealsPerDay,
+    gramsPerMeal
   };
 }

@@ -124,3 +124,45 @@
   color: var(--sage);
   margin: -8px 0 16px;
 }
+
+.highlight-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.highlight-card {
+  background: rgba(199, 154, 61, 0.1);
+  border: 2px solid var(--gold);
+  border-radius: 14px;
+  padding: 14px 12px;
+  text-align: center;
+}
+
+.highlight-card .highlight-value {
+  display: block;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 1.3rem;
+  font-weight: 500;
+  color: var(--pine);
+  line-height: 1.2;
+}
+
+.highlight-card .highlight-detail {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--ink);
+  opacity: 0.75;
+  margin-top: 2px;
+}
+
+.highlight-card .highlight-label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--gold);
+  margin-bottom: 6px;
+}
