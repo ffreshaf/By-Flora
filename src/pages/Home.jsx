@@ -1,44 +1,22 @@
-import { useEffect, useState } from 'react';
-import { addDog, getAllDogs, updateDog } from '../db/dogs.js';
-import DogForm from '../components/DogForm.jsx';
+import { Link } from 'react-router-dom';
+import { useDog } from '../hooks/useDog.js';
 import PassportStamp from '../components/PassportStamp.jsx';
 import { calculateDailyFood } from '../utils/food.js';
 import { calculateExerciseMinutes } from '../utils/exercise.js';
-import TodayCare from '../components/TodayCare.jsx';
+import { PLAY_TARGET } from '../utils/reminders.js';
 import './Home.css';
 
 function Home() {
-  const [dog, setDog] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState(false);
-
-  useEffect(() => {
-    loadDog();
-  }, []);
-
-  async function loadDog() {
-    const dogs = await getAllDogs();
-    setDog(dogs[0] || null);
-    setLoading(false);
-  }
-
-  async function handleSave(dogData) {
-    if (dog) {
-      await updateDog(dog.id, dogData);
-    } else {
-      await addDog(dogData);
-    }
-    setEditing(false);
-    await loadDog();
-  }
+  const { dog, loading } = useDog();
 
   if (loading) return <p>Loading...</p>;
 
-  if (!dog || editing) {
+  if (!dog) {
     return (
       <div className="care-card">
-        <h2>{dog ? 'Edit profile' : "Let's set up your dog's profile"}</h2>
-        <DogForm initialDog={dog} onSave={handleSave} />
+        <h2>Welcome!</h2>
+        <p>Let's set up her profile first.</p>
+        <Link to="/settings" className="btn btn-primary">Go to Settings</Link>
       </div>
     );
   }
@@ -55,16 +33,21 @@ function Home() {
         <div className="highlight-card">
           <span className="highlight-label">Food</span>
           <span className="highlight-value">{mealsPerDay}× {gramsPerMeal}g</span>
-          <span className="highlight-detail">{gramsPerDay}g total per day</span>
+          <span className="highlight-detail">{gramsPerDay}g/day</span>
         </div>
         <div className="highlight-card">
           <span className="highlight-label">Exercise</span>
           <span className="highlight-value">
-            {sessions ? `${sessions}× ${minutesPerSession}min` : `${minutesPerDay} min`}
+            {sessions ? `${sessions}× ${minutesPerSession}m` : `${minutesPerDay}m`}
           </span>
           <span className="highlight-detail">
-            {sessions ? `${minutesPerDay} min total per day` : 'in one walk or split up'}
+            {sessions ? `${minutesPerDay} min/day` : 'walk or split up'}
           </span>
+        </div>
+        <div className="highlight-card">
+          <span className="highlight-label">Play</span>
+          <span className="highlight-value">{PLAY_TARGET}m</span>
+          <span className="highlight-detail">enrichment/day</span>
         </div>
       </div>
 
@@ -76,10 +59,6 @@ function Home() {
         <li>Size <span>{dog.size}</span></li>
         <li>Activity <span>{dog.activityLevel}</span></li>
       </ul>
-
-      <TodayCare dog={dog} mealsPerDay={mealsPerDay} exerciseMinutesPerDay={minutesPerDay} />
-
-      <button className="btn btn-primary" onClick={() => setEditing(true)}>Edit profile</button>
     </div>
   );
 }

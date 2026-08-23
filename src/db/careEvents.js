@@ -1,10 +1,11 @@
 import { db } from '../db.js';
 
-export async function logCareEvent(dogId, type) {
+export async function logCareEvent(dogId, type, durationMinutes = null) {
   // type: 'feed' | 'walk' | 'play' | 'bath'
   return db.careEvents.add({
     dogId,
     type,
+    durationMinutes,
     timestamp: Date.now()
   });
 }

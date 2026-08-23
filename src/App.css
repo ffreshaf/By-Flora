@@ -61,31 +61,40 @@ header h1 {
 }
 
 
-nav {
-  margin-top: 12px;
-  display: flex;
-  justify-content: center;
-  gap: 16px;
-}
-
-nav a {
-  color: var(--paper);
-  text-decoration: none;
-  font-weight: 500;
-  font-size: 0.9rem;
-  padding: 6px 14px;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.12);
-  transition: background 0.2s ease;
-}
-
-nav a:hover,
-nav a:focus-visible {
-  background: rgba(255,255,255,0.25);
-}
-
 main {
-  padding: 20px;
+  padding: 20px 20px 90px;
+}
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  background: var(--pine);
+  display: flex;
+  justify-content: space-around;
+  padding: 10px 4px calc(10px + env(safe-area-inset-bottom));
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+}
+
+.nav-item {
+  color: rgba(246, 243, 234, 0.65);
+  text-decoration: none;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 6px 8px;
+  border-radius: 10px;
+  transition: color 0.2s ease, background 0.2s ease;
+}
+
+.nav-item.active {
+  color: var(--gold);
+  background: rgba(255,255,255,0.08);
 }
 
 .passport-stamp {
