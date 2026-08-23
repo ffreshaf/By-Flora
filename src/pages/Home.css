@@ -1,14 +1,18 @@
+main > .care-card:first-child {
+  margin-top: 4px;
+}
+
 .care-card {
   background: white;
   border-radius: var(--radius);
-  padding: 24px 20px;
+  padding: 16px 14px;
   text-align: center;
   box-shadow: 0 2px 10px rgba(47, 74, 61, 0.08);
 }
 
 .care-card h2 {
-  font-size: 1.3rem;
-  margin-bottom: 16px;
+  font-size: 1.1rem;
+  margin-bottom: 12px;
 }
 
 .stat-list {
@@ -21,9 +25,9 @@
 .stat-list li {
   display: flex;
   justify-content: space-between;
-  padding: 10px 4px;
+  padding: 7px 4px;
   border-bottom: 1px solid rgba(124, 152, 133, 0.25);
-  font-size: 0.95rem;
+  font-size: 0.85rem;
 }
 
 .stat-list li:last-child {
@@ -38,9 +42,11 @@
 
 .btn {
   font-weight: 600;
+  display: inline-block;
   border: none;
   border-radius: 999px;
-  padding: 10px 22px;
+  padding: 8px 18px;
+  font-size: 0.85rem;
   cursor: pointer;
   transition: transform 0.15s ease, opacity 0.15s ease;
 }
@@ -67,26 +73,26 @@
 .dog-form {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
   text-align: left;
 }
 
 .form-group label {
   display: block;
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   font-weight: 500;
   color: var(--pine);
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 
 .form-group input,
 .form-group select {
   width: 100%;
-  padding: 10px 12px;
+  padding: 8px 10px;
   border: 2px solid rgba(124, 152, 133, 0.4);
-  border-radius: 10px;
+  border-radius: 8px;
   font-family: 'Work Sans', sans-serif;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   background: var(--paper);
   color: var(--ink);
 }
@@ -117,23 +123,88 @@
   font-weight: 600;
   cursor: pointer;
   margin-top: 4px;
+  width: auto;
+  max-width: 240px;
+  align-self: center;
 }
 
 .care-note {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: var(--sage);
-  margin: -8px 0 16px;
+  margin: -4px 0 12px;
 }
 
 .highlight-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.highlight-card {
+  background: rgba(199, 154, 61, 0.1);
+  border: 2px solid var(--gold);
+  border-radius: 12px;
+  padding: 10px 8px;
+  text-align: center;
+}
+
+.highlight-card .highlight-value {
+  display: block;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: var(--pine);
+  line-height: 1.2;
+}
+
+.highlight-card .highlight-detail {
+  display: block;
+  font-size: 0.68rem;
+  color: var(--ink);
+  opacity: 0.75;
+  margin-top: 1px;
+}
+
+.highlight-card .highlight-label {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--gold);
+  margin-bottom: 3px;
 }
 
 .highlight-grid-2 {
   grid-template-columns: 1fr 1fr;
+}
+
+@media (max-width: 420px) {
+  .highlight-grid {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .highlight-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-align: left;
+    padding: 9px 12px;
+  }
+
+  .highlight-card .highlight-label {
+    margin-bottom: 0;
+  }
+
+  .highlight-card .highlight-value {
+    font-size: 0.95rem;
+  }
+
+  .highlight-card .highlight-detail {
+    display: none;
+  }
 }
 
 .highlight-card-solo {
@@ -155,14 +226,26 @@
 }
 
 .log-btn {
-  width: 100%;
-  margin-bottom: 20px;
+  width: auto;
+  max-width: 240px;
+  margin: 0 auto 20px;
+  display: inline-block;
 }
 
 .history-heading {
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   color: var(--pine);
-  margin: 20px 0 8px;
+  margin: 14px 0 6px;
+}
+
+.history-list li {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.75rem;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(124, 152, 133, 0.2);
+  display: flex;
+  gap: 6px;
+  align-items: center;
 }
 
 .history-list {
@@ -171,15 +254,6 @@
   margin: 0;
 }
 
-.history-list li {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.8rem;
-  padding: 8px 0;
-  border-bottom: 1px solid rgba(124, 152, 133, 0.2);
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
 
 .history-type {
   background: var(--sage);
@@ -285,4 +359,14 @@
 .custom-log-row input:focus {
   outline: none;
   border-color: var(--gold);
+}
+
+.passport-stamp {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 8px;
+}
+
+.stamp-initial {
+  font-size: 1.4rem;
 }

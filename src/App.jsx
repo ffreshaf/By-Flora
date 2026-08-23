@@ -8,19 +8,28 @@ import Activity from './pages/Activity.jsx'
 import Baths from './pages/Baths.jsx'
 import About from './pages/About.jsx'
 
+const NAV_ITEMS = [
+  { to: '/', end: true, icon: '🏠', label: 'Home' },
+  { to: '/meals', icon: '🍖', label: 'Meals' },
+  { to: '/activity', icon: '🐾', label: 'Activity' },
+  { to: '/baths', icon: '🛁', label: 'Baths' },
+  { to: '/settings', icon: '⚙️', label: 'Settings' },
+];
+
 function App() {
   const [spinning, setSpinning] = useState(false);
 
   const handleLogoClick = () => {
     setSpinning(true);
-    setTimeout(() => setSpinning(false), 2000);
+    setTimeout(() => setSpinning(false), 1600);
   }
 
   return (
     <div className="app-shell">
       <header>
-        <h1>By Flora</h1>
         <img src="/By-Flora.png" alt="By Flora Logo" className={`logo ${spinning ? 'spinning' : ''}`} onClick={handleLogoClick} />
+        <h1>By Flora</h1>
+        <p className="tagline">Everything for taking care of her</p>
       </header>
 
       <main>
@@ -35,11 +44,17 @@ function App() {
       </main>
 
       <nav className="bottom-nav">
-        <NavLink to="/" end className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>Home</NavLink>
-        <NavLink to="/meals" className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>Meals</NavLink>
-        <NavLink to="/activity" className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>Activity</NavLink>
-        <NavLink to="/baths" className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>Baths</NavLink>
-        <NavLink to="/settings" className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>Settings</NavLink>
+        {NAV_ITEMS.map(({ to, end, icon, label }) => (
+          <NavLink
+            key={to}
+            to={to}
+            end={end}
+            className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
+          >
+            <span className="nav-icon">{icon}</span>
+            {label}
+          </NavLink>
+        ))}
       </nav>
     </div>
   )
