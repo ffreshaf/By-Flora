@@ -16,9 +16,6 @@ export async function getLastEvent(dogId, type) {
 }
 
 export async function getEventsForDog(dogId) {
-  return db.careEvents
-    .where('dogId')
-    .equals(dogId)
-    .reverse()
-    .sortBy('timestamp');
+  const events = await db.careEvents.where('dogId').equals(dogId).toArray();
+  return events.sort((a, b) => b.timestamp - a.timestamp); // most recent first
 }

@@ -4,6 +4,7 @@ import DogForm from '../components/DogForm.jsx';
 import PassportStamp from '../components/PassportStamp.jsx';
 import { calculateDailyFood } from '../utils/food.js';
 import { calculateExerciseMinutes } from '../utils/exercise.js';
+import TodayCare from '../components/TodayCare.jsx';
 import './Home.css';
 
 function Home() {
@@ -75,6 +76,8 @@ function Home() {
         <li>Size <span>{dog.size}</span></li>
         <li>Activity <span>{dog.activityLevel}</span></li>
       </ul>
+
+      <TodayCare dog={dog} mealsPerDay={mealsPerDay} exerciseMinutesPerDay={minutesPerDay} />
 
       <button className="btn btn-primary" onClick={() => setEditing(true)}>Edit profile</button>
     </div>

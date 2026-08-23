@@ -166,3 +166,68 @@
   color: var(--gold);
   margin-bottom: 6px;
 }
+
+.today-care {
+  margin-top: 8px;
+  text-align: left;
+}
+
+.today-care h3 {
+  font-size: 1rem;
+  color: var(--pine);
+  margin-bottom: 10px;
+}
+
+.care-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(124, 152, 133, 0.25);
+}
+
+.care-row:last-child {
+  border-bottom: none;
+}
+
+.care-row-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.care-row-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.care-row-progress {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--sage);
+}
+
+.care-row-progress.is-due {
+  color: var(--brick);
+  font-weight: 500;
+}
+
+.care-row-input {
+  display: flex;
+  gap: 6px;
+}
+
+.care-row-input input {
+  width: 52px;
+  padding: 6px 8px;
+  border: 2px solid rgba(124, 152, 133, 0.4);
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.btn-small {
+  padding: 6px 14px;
+  font-size: 0.8rem;
+}
