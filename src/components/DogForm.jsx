@@ -10,6 +10,8 @@ function DogForm({ initialDog, onSave }) {
   const [size, setSize] = useState(initialDog?.size || 'medium');
   const [activityLevel, setActivityLevel] = useState(initialDog?.activityLevel || 'moderate');
   const [kcalPer100g, setKcalPer100g] = useState(initialDog?.kcalPer100g || 350);
+  const [weightGoal, setWeightGoal] = useState(initialDog?.weightGoal || 'maintain');
+  const [targetWeightKg, setTargetWeightKg] = useState(initialDog?.targetWeightKg || '');
   const [error, setError] = useState('');
 
   const handleSubmit = (e) => {
@@ -35,7 +37,9 @@ function DogForm({ initialDog, onSave }) {
       weightKg: Number(weightKg),
       size,
       activityLevel,
-      kcalPer100g: Number(kcalPer100g)
+      kcalPer100g: Number(kcalPer100g),
+      weightGoal,
+      targetWeightKg: targetWeightKg ? Number(targetWeightKg) : null
     });
   };
 
@@ -76,6 +80,31 @@ function DogForm({ initialDog, onSave }) {
           placeholder="e.g. 12.5"
         />
       </div>
+
+      <div className="form-group">
+        <label htmlFor="weightGoal">Weight goal</label>
+        <select id="weightGoal" value={weightGoal} onChange={(e) => setWeightGoal(e.target.value)}>
+          <option value="maintain">Maintain current weight</option>
+          <option value="lose">Help her lose weight</option>
+          <option value="gain">Help her gain weight</option>
+        </select>
+      </div>
+
+      {weightGoal !== 'maintain' && (
+        <div className="form-group">
+          <label htmlFor="targetWeight">Target weight (kg) — optional</label>
+          <input
+            id="targetWeight"
+            type="number"
+            min="0"
+            step="0.1"
+            value={targetWeightKg}
+            onChange={(e) => setTargetWeightKg(e.target.value)}
+            placeholder="Ask your vet for a healthy target"
+          />
+          <small>Leave blank if unsure — your vet can give the best target.</small>
+        </div>
+      )}
 
       <div className="form-group">
         <label htmlFor="size">Size</label>

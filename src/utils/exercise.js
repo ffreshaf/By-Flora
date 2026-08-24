@@ -13,9 +13,8 @@ const ACTIVITY_MODIFIERS = {
 };
 
 export function calculateExerciseMinutes(dog) {
-  const { ageMonths, size, activityLevel } = dog;
+  const { ageMonths, size, activityLevel, weightGoal } = dog;
 
-  // Puppy rule: short, frequent sessions genuinely protect growing joints
   if (ageMonths < 12) {
     const perSession = Math.min(ageMonths * 5, 60);
     return {
@@ -28,12 +27,14 @@ export function calculateExerciseMinutes(dog) {
 
   const base = SIZE_BASE_MINUTES[size] ?? SIZE_BASE_MINUTES.medium;
   const modifier = ACTIVITY_MODIFIERS[activityLevel] ?? ACTIVITY_MODIFIERS.moderate;
-  const minutesPerDay = Math.round(base * modifier);
+  let minutesPerDay = Math.round(base * modifier);
+  let note = 'One walk or split into a few shorter ones — total time is what counts.';
 
-  return {
-    minutesPerDay,
-    sessions: null,
-    minutesPerSession: null,
-    note: 'One walk or split into a few shorter ones — total time is what counts.'
-  };
+  if (weightGoal === 'lose') {
+    // Start slightly below the standard target and build up gradually rather than jumping straight in
+    minutesPerDay = Math.round(minutesPerDay * 0.85);
+    note = 'Start here and build up over a few weeks as her fitness improves — low-impact activity (walks, swimming) is easiest on joints while she loses weight.';
+  }
+
+  return { minutesPerDay, sessions: null, minutesPerSession: null, note };
 }

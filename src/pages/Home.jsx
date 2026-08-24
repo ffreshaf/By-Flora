@@ -21,7 +21,7 @@ function Home() {
     );
   }
 
-  const { gramsPerDay, mealsPerDay, gramsPerMeal } = calculateDailyFood(dog);
+  const { gramsPerDay, mealsPerDay, gramsPerMeal, goalNote } = calculateDailyFood(dog);
   const { minutesPerDay, sessions, minutesPerSession, note } = calculateExerciseMinutes(dog);
 
   return (
@@ -51,6 +51,7 @@ function Home() {
         </div>
       </div>
 
+      {goalNote && <p className="care-note">{goalNote}</p>}
       {note && <p className="care-note">{note}</p>}
 
       <ul className="stat-list">
