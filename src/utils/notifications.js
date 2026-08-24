@@ -1,9 +1,12 @@
 import { LocalNotifications } from '@capacitor/local-notifications';
+
 import { getEventsForDog } from '../db/careEvents.js';
+
 import { startOfToday } from './reminders.js';
 
 export async function requestNotificationPermission() {
   const result = await LocalNotifications.requestPermissions();
+
   return result.display === 'granted';
 }
 
@@ -14,49 +17,128 @@ export async function setupActionTypes() {
         id: 'CARE_CONFIRM',
         actions: [
           { id: 'yes', title: 'Yes, done' },
-          { id: 'no', title: 'Not yet' }
-        ]
-      }
-    ]
+          { id: 'no', title: 'Not yet' },
+        ],
+      },
+    ],
   });
 }
 
 const REMINDER_DEFS = [
-  { id: 1, careType: 'feed', hour: 8, minute: 0, title: 'Feeding time 🍖', body: 'Did you feed her yet?' },
-  { id: 2, careType: 'feed', hour: 18, minute: 0, title: 'Feeding time 🍖', body: 'Second meal — did you feed her yet?' },
-  { id: 3, careType: 'walk', hour: 17, minute: 0, title: 'Walk time 🐾', body: 'Have you taken her for a walk today?' }
+  {
+    id: 1,
+    careType: 'feed',
+    hour: 8,
+    minute: 0,
+    title: 'Feeding time 🍖',
+    body: 'Did you feed her yet?',
+  },
+  {
+    id: 2,
+    careType: 'feed',
+    hour: 18,
+    minute: 0,
+    title: 'Feeding time 🍖',
+    body: 'Second meal — did you feed her yet?',
+  },
+  {
+    id: 3,
+    careType: 'walk',
+    hour: 17,
+    minute: 0,
+    title: 'Walk time 🐾',
+    body: 'Have you taken her for a walk today?',
+  },
 ];
 
-// Call this on app load AND right after any manual log, so scheduling always reflects reality
+function getNextReminderDate(hour, minute) {
+  const now = new Date();
+
+  const next = new Date();
+  next.setHours(hour, minute, 0, 0);
+
+  // If today's time has already passed,
+  // schedule it for tomorrow.
+  if (next <= now) {
+    next.setDate(next.getDate() + 1);
+  }
+
+  return next;
+}
+
 export async function scheduleSmartReminders(dogId) {
   const events = await getEventsForDog(dogId);
-  const todayEvents = events.filter((e) => e.timestamp >= startOfToday());
 
-  const feedCountToday = todayEvents.filter((e) => e.type === 'feed').length;
-  const walkedToday = todayEvents.some((e) => e.type === 'walk');
+  const todayEvents = events.filter(
+    (e) => e.timestamp >= startOfToday()
+  );
 
-  // Cancel everything first, then only re-schedule what's still actually needed
-  await LocalNotifications.cancel({ notifications: REMINDER_DEFS.map((r) => ({ id: r.id })) });
+  const feedCountToday = todayEvents.filter(
+    (e) => e.type === 'feed'
+  ).length;
+
+  const walkedToday = todayEvents.some(
+    (e) => e.type === 'walk'
+  );
+
+  // Remove the previous versions of our reminders.
+  await LocalNotifications.cancel({
+    notifications: REMINDER_DEFS.map((reminder) => ({
+      id: reminder.id,
+    })),
+  });
 
   const toSchedule = [];
 
   for (const reminder of REMINDER_DEFS) {
-    // Skip meal reminders once 2 meals are already logged today
-    if (reminder.careType === 'feed' && feedCountToday >= 2) continue;
-    // Skip walk reminder if a walk's already logged today
-    if (reminder.careType === 'walk' && walkedToday) continue;
+    // Two meals already logged today.
+    if (
+      reminder.careType === 'feed' &&
+      feedCountToday >= 2
+    ) {
+      continue;
+    }
+
+    // A walk has already been logged today.
+    if (
+      reminder.careType === 'walk' &&
+      walkedToday
+    ) {
+      continue;
+    }
+
+    const nextDate = getNextReminderDate(
+      reminder.hour,
+      reminder.minute
+    );
 
     toSchedule.push({
       id: reminder.id,
       title: reminder.title,
       body: reminder.body,
-      schedule: { on: { hour: reminder.hour, minute: reminder.minute }, every: 'day' },
+
+      schedule: {
+        at: nextDate,
+        repeats: true,
+        every: 'day',
+      },
+
       actionTypeId: 'CARE_CONFIRM',
-      extra: { careType: reminder.careType }
+
+      extra: {
+        careType: reminder.careType,
+      },
     });
   }
 
   if (toSchedule.length > 0) {
-    await LocalNotifications.schedule({ notifications: toSchedule });
+    await LocalNotifications.schedule({
+      notifications: toSchedule,
+    });
   }
+
+  console.log(
+    'Scheduled reminders:',
+    toSchedule
+  );
 }

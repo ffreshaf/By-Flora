@@ -1,14 +1,22 @@
-import { Routes, Route, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import {
+  Routes,
+  Route,
+  NavLink,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom';
+
 import { App as CapacitorApp } from '@capacitor/app';
 import { useEffect, useRef, useState } from 'react';
 import { LocalNotifications } from '@capacitor/local-notifications';
 
 import { logCareEvent } from './db/careEvents.js';
 import { getAllDogs } from './db/dogs.js';
+
 import {
   requestNotificationPermission,
   setupActionTypes,
-  scheduleSmartReminders
+  scheduleSmartReminders,
 } from './utils/notifications.js';
 
 import './App.css';
@@ -39,44 +47,63 @@ function App() {
   const touchStart = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
-    initNotifications();
-  }, []);
+    let notificationListener;
 
-  async function initNotifications() {
-    const granted = await requestNotificationPermission();
+    async function initNotifications() {
+      const granted = await requestNotificationPermission();
 
-    if (!granted) return;
+      if (!granted) {
+        console.log('Notifications are not permitted');
+        return;
+      }
 
-    await setupActionTypes();
+      // Register the "Yes, done" / "Not yet" buttons.
+      await setupActionTypes();
 
-    const dogs = await getAllDogs();
-    const dog = dogs[0];
+      // Find the current dog.
+      const dogs = await getAllDogs();
+      const dog = dogs[0];
 
-    if (dog) {
-      await scheduleSmartReminders(dog.id);
+      // Schedule the reminders.
+      if (dog) {
+        await scheduleSmartReminders(dog.id);
+      }
+
+      // Listen for notification actions.
+      notificationListener =
+        await LocalNotifications.addListener(
+          'localNotificationActionPerformed',
+          async (action) => {
+            if (action.actionId === 'yes') {
+              const careType =
+                action.notification.extra?.careType;
+
+              if (dog && careType) {
+                await logCareEvent(
+                  dog.id,
+                  careType,
+                  careType === 'feed' ? null : 20
+                );
+
+                // Recalculate reminders after logging.
+                await scheduleSmartReminders(dog.id);
+              }
+            }
+
+            CapacitorApp.minimizeApp();
+          }
+        );
     }
 
-    LocalNotifications.addListener(
-      'localNotificationActionPerformed',
-      async (action) => {
-        if (action.actionId === 'yes') {
-          const careType = action.notification.extra?.careType;
+    initNotifications();
 
-          if (dog && careType) {
-            await logCareEvent(
-              dog.id,
-              careType,
-              careType === 'feed' ? null : 20
-            );
-
-            await scheduleSmartReminders(dog.id);
-          }
-        }
-
-        CapacitorApp.minimizeApp();
+    // Clean up listener.
+    return () => {
+      if (notificationListener) {
+        notificationListener.remove();
       }
-    );
-  }
+    };
+  }, []);
 
   const handleLogoClick = () => {
     setSpinning(true);
@@ -107,10 +134,12 @@ function App() {
     // Ignore small movements.
     if (horizontalDistance < 55) return;
 
-    // Ignore primarily vertical movements so normal scrolling still works.
-    if (verticalDistance > horizontalDistance * 0.75) return;
+    // Ignore primarily vertical movements so normal scrolling works.
+    if (verticalDistance > horizontalDistance * 0.75) {
+      return;
+    }
 
-    // Don't swipe between pages while interacting with form controls.
+    // Don't swipe while interacting with controls.
     const target = event.target;
 
     if (
@@ -121,9 +150,11 @@ function App() {
       return;
     }
 
-    const currentIndex = SWIPE_ROUTES.indexOf(location.pathname);
+    const currentIndex = SWIPE_ROUTES.indexOf(
+      location.pathname
+    );
 
-    // About and any future non-main routes don't participate in swipe navigation.
+    // About and future non-main routes don't participate.
     if (currentIndex === -1) return;
 
     let nextIndex;
@@ -144,10 +175,13 @@ function App() {
     }
   }
 
-  const isSwipePage = SWIPE_ROUTES.includes(location.pathname);
+  const isSwipePage = SWIPE_ROUTES.includes(
+    location.pathname
+  );
 
   return (
     <div className="app-shell">
+
       <header>
         <img
           src="/By-Flora.png"
@@ -155,6 +189,7 @@ function App() {
           className={`logo ${spinning ? 'spinning' : ''}`}
           onClick={handleLogoClick}
         />
+
         <div className="header-copy">
           <h1>By Flora</h1>
 
@@ -166,8 +201,12 @@ function App() {
 
       <main
         className={isSwipePage ? 'swipe-area' : ''}
-        onTouchStart={isSwipePage ? handleTouchStart : undefined}
-        onTouchEnd={isSwipePage ? handleTouchEnd : undefined}
+        onTouchStart={
+          isSwipePage ? handleTouchStart : undefined
+        }
+        onTouchEnd={
+          isSwipePage ? handleTouchEnd : undefined
+        }
       >
         <div
           key={location.pathname}
@@ -185,20 +224,26 @@ function App() {
       </main>
 
       <nav className="bottom-nav">
-        {NAV_ITEMS.map(({ to, end, icon, label }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={end}
-            className={({ isActive }) =>
-              `nav-item${isActive ? ' active' : ''}`
-            }
-          >
-            <span className="nav-icon">{icon}</span>
-            {label}
-          </NavLink>
-        ))}
+        {NAV_ITEMS.map(
+          ({ to, end, icon, label }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={end}
+              className={({ isActive }) =>
+                `nav-item${isActive ? ' active' : ''}`
+              }
+            >
+              <span className="nav-icon">
+                {icon}
+              </span>
+
+              {label}
+            </NavLink>
+          )
+        )}
       </nav>
+
     </div>
   );
 }
