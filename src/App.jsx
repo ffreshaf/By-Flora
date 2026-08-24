@@ -18,6 +18,7 @@ import {
   setupActionTypes,
   scheduleRemindersForAllDogs,
   scheduleSmartReminders,
+  cancelOrphanedReminders
 } from './utils/notifications.js';
 
 import './App.css';
@@ -50,41 +51,63 @@ function App() {
     let notificationListener;
 
     async function initNotifications() {
-      const granted = await requestNotificationPermission();
-      if (!granted) {
-        console.log('Notifications are not permitted');
-        return;
-      }
-
-      await setupActionTypes();
-      await scheduleRemindersForAllDogs();
-
-      notificationListener = await LocalNotifications.addListener(
-        'localNotificationActionPerformed',
-        async (action) => {
-          console.log('Notification action received:', JSON.stringify(action));
-
-          if (action.actionId === 'yes') {
-            const { careType, dogId } = action.notification.extra || {};
-            console.log('careType:', careType, 'dogId:', dogId);
-
-            if (dogId && careType) {
-              const dog = await getDog(dogId);
-              console.log('Looked up dog:', dog);
-
-              if (dog) {
-                await logCareEvent(dog.id, careType, careType === 'feed' ? null : 20);
-                console.log('Logged event for', dog.name);
-                await scheduleSmartReminders(dog.id);
-              }
-            } else {
-              console.log('Missing dogId or careType in notification extra data');
-            }
-          }
-
-          CapacitorApp.minimizeApp();
+      try {
+        const granted = await requestNotificationPermission();
+        if (!granted) {
+          console.log('Notifications are not permitted');
+          return;
         }
-      );
+
+        await setupActionTypes();
+
+        try {
+          await cancelOrphanedReminders();
+        } catch (err) {
+          console.log('cancelOrphanedReminders failed (continuing anyway):', err);
+        }
+
+        try {
+          await scheduleRemindersForAllDogs();
+        } catch (err) {
+          console.log('scheduleRemindersForAllDogs failed (continuing anyway):', err);
+        }
+
+        // This MUST run regardless of whether the steps above succeeded
+        notificationListener = await LocalNotifications.addListener(
+          'localNotificationActionPerformed',
+          async (action) => {
+            console.log('Notification action received:', JSON.stringify(action));
+
+            try {
+              if (action.actionId === 'yes') {
+                const { careType, dogId } = action.notification.extra || {};
+                console.log('careType:', careType, 'dogId:', dogId);
+
+                if (dogId && careType) {
+                  const dog = await getDog(dogId);
+                  console.log('Looked up dog:', dog);
+
+                  if (dog) {
+                    await logCareEvent(dog.id, careType, careType === 'feed' ? null : 20);
+                    console.log('Logged event for', dog.name);
+                    await scheduleSmartReminders(dog.id);
+                  }
+                } else {
+                  console.log('Missing dogId or careType in notification extra data');
+                }
+              }
+            } catch (err) {
+              console.log('Error handling notification action:', err);
+            }
+
+            CapacitorApp.minimizeApp();
+          }
+        );
+
+        console.log('Notification listener registered successfully');
+      } catch (err) {
+        console.log('initNotifications failed entirely:', err);
+      }
     }
 
     initNotifications();

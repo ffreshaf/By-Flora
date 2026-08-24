@@ -9,7 +9,8 @@ import {
   getReminderSlotsForDog,
   saveGlobalReminderTimes,
   saveDogReminderTimes,
-  clearDogReminderOverride
+  clearDogReminderOverride,
+  cancelRemindersForDog
 } from '../utils/notifications.js';
 import DogForm from '../components/DogForm.jsx';
 import './Home.css';
@@ -98,6 +99,8 @@ function Settings() {
   async function handleDelete() {
     if (!dog) return;
     if (!confirm(`Remove ${dog.name}'s profile? This can't be undone.`)) return;
+
+    await cancelRemindersForDog(dog.id); // cancel BEFORE deleting, while we still know dog.id
     await deleteDog(dog.id);
     await reload();
   }

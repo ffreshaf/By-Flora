@@ -23,6 +23,13 @@ export async function setupActionTypes() {
   });
 }
 
+export async function cancelRemindersForDog(dogId) {
+  const slots = await getReminderSlotsForDog(dogId);
+  await LocalNotifications.cancel({
+    notifications: slots.map((slot) => ({ id: notificationIdFor(dogId, slot.id) }))
+  });
+}
+
 const DEFAULT_SLOTS = [
   { id: 1, careType: 'feed', hour: 8, minute: 0, title: 'Feeding time 🍖', body: (name) => `Did you feed ${name} yet?` },
   { id: 2, careType: 'feed', hour: 18, minute: 0, title: 'Feeding time 🍖', body: (name) => `Second meal — did you feed ${name} yet?` },
@@ -66,6 +73,21 @@ export async function clearDogReminderOverride(dogId) {
   await updateDog(dogId, { reminderTimes: null });
 }
 
+export async function cancelOrphanedReminders() {
+  const dogs = await getAllDogs();
+  const validDogIds = new Set(dogs.map((d) => d.id));
+
+  const pending = await LocalNotifications.getPending();
+  const orphaned = pending.notifications.filter((n) => {
+    const dogId = n.extra?.dogId;
+    return dogId && !validDogIds.has(dogId);
+  });
+
+  if (orphaned.length > 0) {
+    await LocalNotifications.cancel({ notifications: orphaned.map((n) => ({ id: n.id })) });
+  }
+}
+
 function getNextReminderDate(hour, minute) {
   const now = new Date();
   const next = new Date();
@@ -76,7 +98,7 @@ function getNextReminderDate(hour, minute) {
   return next;
 }
 
-function notificationIdFor(dogId, slotId) {
+export function notificationIdFor(dogId, slotId) {
   return dogId * 100 + slotId;
 }
 
