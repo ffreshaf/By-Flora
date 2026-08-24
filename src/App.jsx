@@ -1,5 +1,9 @@
 import { Routes, Route, NavLink } from 'react-router-dom'
-import { useState } from 'react'
+import { useEffect, useState } from 'react';
+import { LocalNotifications } from '@capacitor/local-notifications';
+import { logCareEvent } from './db/careEvents.js';
+import { getAllDogs } from './db/dogs.js';
+import { requestNotificationPermission, setupActionTypes, scheduleDailyReminders } from './utils/notifications.js';
 import './App.css'
 import Home from './pages/Home.jsx'
 import Settings from './pages/Settings.jsx'
@@ -18,6 +22,30 @@ const NAV_ITEMS = [
 
 function App() {
   const [spinning, setSpinning] = useState(false);
+
+  useEffect(() => {
+    initNotifications();
+  }, []);
+
+  async function initNotifications() {
+    const granted = await requestNotificationPermission();
+    if (!granted) return;
+
+    await setupActionTypes();
+    await scheduleDailyReminders();
+
+    LocalNotifications.addListener('localNotificationActionPerformed', async (action) => {
+      if (action.actionId === 'yes') {
+        const careType = action.notification.extra?.careType;
+        const dogs = await getAllDogs();
+        const dog = dogs[0];
+        if (dog && careType) {
+          await logCareEvent(dog.id, careType, careType === 'feed' ? null : 20);
+        }
+      }
+      // 'no' just dismisses — nothing to log
+    });
+  }
 
   const handleLogoClick = () => {
     setSpinning(true);
