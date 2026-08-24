@@ -1,19 +1,20 @@
 @import url('https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap');
 
 :root {
-  --paper: #F8F1E4;   /* warm cream background */
-  --blush: #FBEADD;   /* soft card surface, one shade up from paper */
-  --pine: #2B4F45;    /* deep muted teal-green — structure, headings, nav */
-  --ink: #3B2F28;     /* warm dark umber — body text, softer than black */
-  --gold: #DD7A3E;    /* warm apricot-orange — the accent, used sparingly */
-  --sage: #8A9A87;    /* muted secondary green — dividers, quiet text */
-  --brick: #B23A2E;   /* alert red — overdue reminders only */
+  --paper: #F8F1E4;
+  --blush: #FBEADD;
+  --pine: #514B3D;
+  --ink: #3B2F28;
+  --gold: #DD7A3E;
+  --sage: #8A9A87;
+  --brick: #B23A2E;
   --radius: 16px;
 
   font-family: 'Work Sans', sans-serif;
   line-height: 1.5;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -22,7 +23,9 @@
   box-sizing: border-box;
 }
 
-html, body, #root {
+html,
+body,
+#root {
   min-height: 100dvh;
 }
 
@@ -32,7 +35,9 @@ body {
   color: var(--ink);
 }
 
-h1, h2, h3 {
+h1,
+h2,
+h3 {
   font-family: 'Sora', sans-serif;
   font-weight: 700;
   color: var(--pine);
