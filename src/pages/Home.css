@@ -1,20 +1,40 @@
+.care-card {
+  background: var(--blush);
+  border-radius: var(--radius);
+  padding: 18px 16px;
+  text-align: center;
+  box-shadow: 0 2px 10px rgba(43, 79, 69, 0.06);
+}
+
+.care-card h2 {
+  font-size: 1.15rem;
+  margin-bottom: 14px;
+}
+
 main > .care-card:first-child {
   margin-top: 4px;
 }
 
-.care-card {
-  background: white;
-  border-radius: var(--radius);
-  padding: 16px 14px;
-  text-align: center;
-  box-shadow: 0 2px 10px rgba(47, 74, 61, 0.08);
+/* Care ring — signature element */
+.care-ring-wrap {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.care-card h2 {
-  font-size: 1.1rem;
-  margin-bottom: 12px;
+.care-ring-initial {
+  position: absolute;
+  font-family: 'Sora', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--pine);
 }
 
+/* Stat list */
 .stat-list {
   list-style: none;
   padding: 0;
@@ -26,7 +46,7 @@ main > .care-card:first-child {
   display: flex;
   justify-content: space-between;
   padding: 7px 4px;
-  border-bottom: 1px solid rgba(124, 152, 133, 0.25);
+  border-bottom: 1px solid rgba(138, 154, 135, 0.25);
   font-size: 0.85rem;
 }
 
@@ -40,12 +60,13 @@ main > .care-card:first-child {
   font-weight: 500;
 }
 
+/* Buttons */
 .btn {
   font-weight: 600;
   display: inline-block;
   border: none;
   border-radius: 999px;
-  padding: 8px 18px;
+  padding: 9px 20px;
   font-size: 0.85rem;
   cursor: pointer;
   transition: transform 0.15s ease, opacity 0.15s ease;
@@ -60,7 +81,7 @@ main > .care-card:first-child {
 }
 
 .btn-primary {
-  background: var(--pine);
+  background: var(--gold);
   color: white;
 }
 
@@ -70,6 +91,78 @@ main > .care-card:first-child {
   border: 2px solid var(--sage);
 }
 
+.log-btn {
+  width: auto;
+  max-width: 240px;
+  margin: 0 auto 20px;
+  display: inline-block;
+}
+
+/* Highlight rows — quiet, list-style, accent stripe instead of boxed border */
+.highlight-grid,
+.highlight-grid-2 {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.highlight-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 12px;
+  background: white;
+  border-left: 3px solid var(--gold);
+  border-radius: 10px;
+  padding: 11px 14px;
+  text-align: left;
+}
+
+.highlight-card .highlight-label {
+  order: 1;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--sage);
+}
+
+.highlight-card .highlight-value {
+  order: 2;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 1.02rem;
+  font-weight: 600;
+  color: var(--pine);
+}
+
+.highlight-card .highlight-detail {
+  order: 3;
+  flex-basis: 100%;
+  font-size: 0.72rem;
+  color: var(--ink);
+  opacity: 0.55;
+}
+
+.highlight-card-solo {
+  margin: 0 0 16px;
+}
+
+.highlight-value-small {
+  font-size: 0.95rem;
+}
+
+.is-due-card {
+  border-left-color: var(--brick);
+  background: rgba(178, 58, 46, 0.04);
+}
+
+.is-due-card .highlight-value {
+  color: var(--brick);
+}
+
+/* Form */
 .dog-form {
   display: flex;
   flex-direction: column;
@@ -89,7 +182,7 @@ main > .care-card:first-child {
 .form-group select {
   width: 100%;
   padding: 8px 10px;
-  border: 2px solid rgba(124, 152, 133, 0.4);
+  border: 2px solid rgba(138, 154, 135, 0.4);
   border-radius: 8px;
   font-family: 'Work Sans', sans-serif;
   font-size: 0.85rem;
@@ -115,11 +208,11 @@ main > .care-card:first-child {
 }
 
 .dog-form button[type="submit"] {
-  background: var(--pine);
+  background: var(--gold);
   color: white;
   border: none;
   border-radius: 999px;
-  padding: 12px;
+  padding: 11px;
   font-weight: 600;
   cursor: pointer;
   margin-top: 4px;
@@ -134,118 +227,11 @@ main > .care-card:first-child {
   margin: -4px 0 12px;
 }
 
-.highlight-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  margin-bottom: 14px;
-}
-
-.highlight-card {
-  background: rgba(199, 154, 61, 0.1);
-  border: 2px solid var(--gold);
-  border-radius: 12px;
-  padding: 10px 8px;
-  text-align: center;
-}
-
-.highlight-card .highlight-value {
-  display: block;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 1.05rem;
-  font-weight: 500;
-  color: var(--pine);
-  line-height: 1.2;
-}
-
-.highlight-card .highlight-detail {
-  display: block;
-  font-size: 0.68rem;
-  color: var(--ink);
-  opacity: 0.75;
-  margin-top: 1px;
-}
-
-.highlight-card .highlight-label {
-  display: block;
-  font-size: 0.62rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: var(--gold);
-  margin-bottom: 3px;
-}
-
-.highlight-grid-2 {
-  grid-template-columns: 1fr 1fr;
-}
-
-@media (max-width: 420px) {
-  .highlight-grid {
-    grid-template-columns: 1fr;
-    gap: 6px;
-  }
-
-  .highlight-card {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    text-align: left;
-    padding: 9px 12px;
-  }
-
-  .highlight-card .highlight-label {
-    margin-bottom: 0;
-  }
-
-  .highlight-card .highlight-value {
-    font-size: 0.95rem;
-  }
-
-  .highlight-card .highlight-detail {
-    display: none;
-  }
-}
-
-.highlight-card-solo {
-  max-width: 200px;
-  margin: 0 auto 16px;
-}
-
-.highlight-value-small {
-  font-size: 1rem;
-}
-
-.is-due-card {
-  border-color: var(--brick);
-  background: rgba(178, 58, 46, 0.08);
-}
-
-.is-due-card .highlight-value {
-  color: var(--brick);
-}
-
-.log-btn {
-  width: auto;
-  max-width: 240px;
-  margin: 0 auto 20px;
-  display: inline-block;
-}
-
+/* History */
 .history-heading {
   font-size: 0.8rem;
   color: var(--pine);
   margin: 14px 0 6px;
-}
-
-.history-list li {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.75rem;
-  padding: 6px 0;
-  border-bottom: 1px solid rgba(124, 152, 133, 0.2);
-  display: flex;
-  gap: 6px;
-  align-items: center;
 }
 
 .history-list {
@@ -254,6 +240,15 @@ main > .care-card:first-child {
   margin: 0;
 }
 
+.history-list li {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.75rem;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(138, 154, 135, 0.2);
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
 
 .history-type {
   background: var(--sage);
@@ -276,6 +271,7 @@ main > .care-card:first-child {
   font-size: 0.8rem;
 }
 
+/* Chips + custom input */
 .chip-row {
   display: flex;
   flex-wrap: wrap;
@@ -296,43 +292,9 @@ main > .care-card:first-child {
 }
 
 .chip:hover {
-  background: var(--sage);
+  background: var(--gold);
+  border-color: var(--gold);
   color: white;
-}
-
-.highlight-card {
-  background: rgba(199, 154, 61, 0.1);
-  border: 2px solid var(--gold);
-  border-radius: 14px;
-  padding: 14px 12px;
-  text-align: center;
-}
-
-.highlight-card .highlight-value {
-  display: block;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 1.3rem;
-  font-weight: 500;
-  color: var(--pine);
-  line-height: 1.2;
-}
-
-.highlight-card .highlight-detail {
-  display: block;
-  font-size: 0.75rem;
-  color: var(--ink);
-  opacity: 0.75;
-  margin-top: 2px;
-}
-
-.highlight-card .highlight-label {
-  display: block;
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--gold);
-  margin-bottom: 6px;
 }
 
 .btn-small {
@@ -349,7 +311,7 @@ main > .care-card:first-child {
 .custom-log-row input {
   flex: 1;
   padding: 8px 12px;
-  border: 2px solid rgba(124, 152, 133, 0.4);
+  border: 2px solid rgba(138, 154, 135, 0.4);
   border-radius: 999px;
   font-size: 0.85rem;
   background: var(--paper);
@@ -359,14 +321,4 @@ main > .care-card:first-child {
 .custom-log-row input:focus {
   outline: none;
   border-color: var(--gold);
-}
-
-.passport-stamp {
-  width: 56px;
-  height: 56px;
-  margin: 0 auto 8px;
-}
-
-.stamp-initial {
-  font-size: 1.4rem;
 }

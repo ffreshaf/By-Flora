@@ -1,6 +1,9 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useDog } from '../hooks/useDog.js';
-import PassportStamp from '../components/PassportStamp.jsx';
+import { getEventsForDog } from '../db/careEvents.js';
+import { startOfToday } from '../utils/reminders.js';
+import CareRing from '../components/CareRing.jsx';
 import { calculateDailyFood } from '../utils/food.js';
 import { calculateExerciseMinutes } from '../utils/exercise.js';
 import { PLAY_TARGET } from '../utils/reminders.js';
@@ -8,6 +11,15 @@ import './Home.css';
 
 function Home() {
   const { dog, loading } = useDog();
+  const [events, setEvents] = useState([]);
+
+  useEffect(() => {
+    if (dog) loadEvents();
+  }, [dog]);
+
+  async function loadEvents() {
+    setEvents(await getEventsForDog(dog.id));
+  }
 
   if (loading) return <p>Loading...</p>;
 
@@ -24,9 +36,19 @@ function Home() {
   const { gramsPerDay, mealsPerDay, gramsPerMeal, goalNote } = calculateDailyFood(dog);
   const { minutesPerDay, sessions, minutesPerSession, note } = calculateExerciseMinutes(dog);
 
+  const todayEvents = events.filter((e) => e.timestamp >= startOfToday());
+  const feedToday = todayEvents.filter((e) => e.type === 'feed').length;
+  const walkMinutesToday = todayEvents.filter((e) => e.type === 'walk').reduce((s, e) => s + (e.durationMinutes || 0), 0);
+  const playMinutesToday = todayEvents.filter((e) => e.type === 'play').reduce((s, e) => s + (e.durationMinutes || 0), 0);
+
+  const feedProgress = mealsPerDay > 0 ? Math.min(feedToday / mealsPerDay, 1) : 0;
+  const walkProgress = minutesPerDay > 0 ? Math.min(walkMinutesToday / minutesPerDay, 1) : 0;
+  const playProgress = PLAY_TARGET > 0 ? Math.min(playMinutesToday / PLAY_TARGET, 1) : 0;
+  const overallProgress = (feedProgress + walkProgress + playProgress) / 3;
+
   return (
     <div className="care-card">
-      <PassportStamp name={dog.name} />
+      <CareRing name={dog.name} progress={overallProgress} />
       <h2>{dog.name}</h2>
 
       <div className="highlight-grid">
