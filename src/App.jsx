@@ -11,11 +11,12 @@ import { useEffect, useRef, useState } from 'react';
 import { LocalNotifications } from '@capacitor/local-notifications';
 
 import { logCareEvent } from './db/careEvents.js';
-import { getAllDogs } from './db/dogs.js';
+import { getDog } from './db/dogs.js';
 
 import {
   requestNotificationPermission,
   setupActionTypes,
+  scheduleRemindersForAllDogs,
   scheduleSmartReminders,
 } from './utils/notifications.js';
 
@@ -23,11 +24,11 @@ import './App.css';
 
 import Home from './pages/Home.jsx';
 import Settings from './pages/Settings.jsx';
+import Profile from './pages/Profile.jsx';
 import Meals from './pages/Meals.jsx';
 import Activity from './pages/Activity.jsx';
 import Baths from './pages/Baths.jsx';
 import About from './pages/About.jsx';
-import Profile from './pages/Profile.jsx';
 
 const NAV_ITEMS = [
   { to: '/', end: true, icon: '🏠', label: 'Home' },
@@ -41,10 +42,8 @@ const SWIPE_ROUTES = NAV_ITEMS.map((item) => item.to);
 
 function App() {
   const [spinning, setSpinning] = useState(false);
-
   const location = useLocation();
   const navigate = useNavigate();
-
   const touchStart = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
@@ -52,52 +51,44 @@ function App() {
 
     async function initNotifications() {
       const granted = await requestNotificationPermission();
-
       if (!granted) {
         console.log('Notifications are not permitted');
         return;
       }
 
-      // Register the "Yes, done" / "Not yet" buttons.
       await setupActionTypes();
+      await scheduleRemindersForAllDogs();
 
-      // Find the current dog.
-      const dog = await getActiveDog();
+      notificationListener = await LocalNotifications.addListener(
+        'localNotificationActionPerformed',
+        async (action) => {
+          console.log('Notification action received:', JSON.stringify(action));
 
-      // Schedule the reminders.
-      if (dog) {
-        await scheduleSmartReminders(dog.id);
-      }
+          if (action.actionId === 'yes') {
+            const { careType, dogId } = action.notification.extra || {};
+            console.log('careType:', careType, 'dogId:', dogId);
 
-      // Listen for notification actions.
-      notificationListener =
-        await LocalNotifications.addListener(
-          'localNotificationActionPerformed',
-          async (action) => {
-            if (action.actionId === 'yes') {
-              const careType =
-                action.notification.extra?.careType;
+            if (dogId && careType) {
+              const dog = await getDog(dogId);
+              console.log('Looked up dog:', dog);
 
-              if (dog && careType) {
-                await logCareEvent(
-                  dog.id,
-                  careType,
-                  careType === 'feed' ? null : 20
-                );
-
-                // Recalculate reminders after logging.
+              if (dog) {
+                await logCareEvent(dog.id, careType, careType === 'feed' ? null : 20);
+                console.log('Logged event for', dog.name);
                 await scheduleSmartReminders(dog.id);
               }
+            } else {
+              console.log('Missing dogId or careType in notification extra data');
             }
-
-            CapacitorApp.minimizeApp();
           }
-        );
+
+          CapacitorApp.minimizeApp();
+        }
+      );
     }
 
     initNotifications();
 
-    // Clean up listener.
     return () => {
       if (notificationListener) {
         notificationListener.remove();
@@ -107,66 +98,34 @@ function App() {
 
   const handleLogoClick = () => {
     setSpinning(true);
-
-    setTimeout(() => {
-      setSpinning(false);
-    }, 1600);
+    setTimeout(() => setSpinning(false), 1600);
   };
 
   function handleTouchStart(event) {
     const touch = event.touches[0];
-
-    touchStart.current = {
-      x: touch.clientX,
-      y: touch.clientY,
-    };
+    touchStart.current = { x: touch.clientX, y: touch.clientY };
   }
 
   function handleTouchEnd(event) {
     const touch = event.changedTouches[0];
-
     const deltaX = touch.clientX - touchStart.current.x;
     const deltaY = touch.clientY - touchStart.current.y;
-
     const horizontalDistance = Math.abs(deltaX);
     const verticalDistance = Math.abs(deltaY);
 
-    // Ignore small movements.
     if (horizontalDistance < 55) return;
+    if (verticalDistance > horizontalDistance * 0.75) return;
 
-    // Ignore primarily vertical movements so normal scrolling works.
-    if (verticalDistance > horizontalDistance * 0.75) {
-      return;
-    }
-
-    // Don't swipe while interacting with controls.
     const target = event.target;
+    if (target.closest('input, textarea, select, button, a, [role="button"]')) return;
 
-    if (
-      target.closest(
-        'input, textarea, select, button, a, [role="button"]'
-      )
-    ) {
-      return;
-    }
-
-    const currentIndex = SWIPE_ROUTES.indexOf(
-      location.pathname
-    );
-
-    // About and future non-main routes don't participate.
+    const currentIndex = SWIPE_ROUTES.indexOf(location.pathname);
     if (currentIndex === -1) return;
 
     let nextIndex;
-
     if (deltaX < 0) {
-      // Swipe left → next page.
-      nextIndex = Math.min(
-        currentIndex + 1,
-        SWIPE_ROUTES.length - 1
-      );
+      nextIndex = Math.min(currentIndex + 1, SWIPE_ROUTES.length - 1);
     } else {
-      // Swipe right → previous page.
       nextIndex = Math.max(currentIndex - 1, 0);
     }
 
@@ -175,13 +134,10 @@ function App() {
     }
   }
 
-  const isSwipePage = SWIPE_ROUTES.includes(
-    location.pathname
-  );
+  const isSwipePage = SWIPE_ROUTES.includes(location.pathname);
 
   return (
     <div className="app-shell">
-
       <header>
         <img
           src="/By-Flora.png"
@@ -189,62 +145,43 @@ function App() {
           className={`logo ${spinning ? 'spinning' : ''}`}
           onClick={handleLogoClick}
         />
-
         <div className="header-copy">
           <h1>By Flora</h1>
-
-          <p className="tagline">
-            Everything for taking care of her
-          </p>
+          <p className="tagline">Everything for taking care of her</p>
         </div>
       </header>
 
       <main
         className={isSwipePage ? 'swipe-area' : ''}
-        onTouchStart={
-          isSwipePage ? handleTouchStart : undefined
-        }
-        onTouchEnd={
-          isSwipePage ? handleTouchEnd : undefined
-        }
+        onTouchStart={isSwipePage ? handleTouchStart : undefined}
+        onTouchEnd={isSwipePage ? handleTouchEnd : undefined}
       >
-        <div
-          key={location.pathname}
-          className="route-stage"
-        >
+        <div key={location.pathname} className="route-stage">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/meals" element={<Meals />} />
             <Route path="/activity" element={<Activity />} />
             <Route path="/baths" element={<Baths />} />
             <Route path="/profile" element={<Profile />} />
-            <Route path="/about" element={<About />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/about" element={<About />} />
           </Routes>
         </div>
       </main>
 
       <nav className="bottom-nav">
-        {NAV_ITEMS.map(
-          ({ to, end, icon, label }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={end}
-              className={({ isActive }) =>
-                `nav-item${isActive ? ' active' : ''}`
-              }
-            >
-              <span className="nav-icon">
-                {icon}
-              </span>
-
-              {label}
-            </NavLink>
-          )
-        )}
+        {NAV_ITEMS.map(({ to, end, icon, label }) => (
+          <NavLink
+            key={to}
+            to={to}
+            end={end}
+            className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
+          >
+            <span className="nav-icon">{icon}</span>
+            {label}
+          </NavLink>
+        ))}
       </nav>
-
     </div>
   );
 }

@@ -2,7 +2,15 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useDog } from '../hooks/useDog.js';
 import { addDog, updateDog, deleteDog } from '../db/dogs.js';
-import { scheduleSmartReminders, getReminderDefs, saveReminderTimes } from '../utils/notifications.js';
+import {
+  scheduleSmartReminders,
+  scheduleRemindersForAllDogs,
+  getGlobalReminderSlots,
+  getReminderSlotsForDog,
+  saveGlobalReminderTimes,
+  saveDogReminderTimes,
+  clearDogReminderOverride
+} from '../utils/notifications.js';
 import DogForm from '../components/DogForm.jsx';
 import './Home.css';
 
@@ -21,27 +29,48 @@ function Settings() {
   const [addingNew, setAddingNew] = useState(false);
 
   const [reminderTimes, setReminderTimes] = useState([]);
+  const [useCustomTimes, setUseCustomTimes] = useState(false);
   const [remindersSaved, setRemindersSaved] = useState(false);
 
   useEffect(() => {
-    loadReminderTimes();
-  }, []);
+    if (dog) loadReminderTimesForDog();
+  }, [dog?.id]);
 
-  async function loadReminderTimes() {
-    const defs = await getReminderDefs();
-    setReminderTimes(defs);
+  async function loadReminderTimesForDog() {
+    if (dog.reminderTimes) {
+      setReminderTimes(await getReminderSlotsForDog(dog.id));
+      setUseCustomTimes(true);
+    } else {
+      setReminderTimes(await getGlobalReminderSlots());
+      setUseCustomTimes(false);
+    }
   }
 
   function handleTimeChange(id, value) {
-    const { hour, minute } = fromTimeInputValue(value);
-    setReminderTimes((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, hour, minute } : r))
-    );
+    const [hour, minute] = value.split(':').map(Number);
+    setReminderTimes((prev) => prev.map((r) => (r.id === id ? { ...r, hour, minute } : r)));
+  }
+
+  async function handleToggleCustom(checked) {
+    setUseCustomTimes(checked);
+    if (!checked && dog) {
+      await clearDogReminderOverride(dog.id);
+      setReminderTimes(await getGlobalReminderSlots());
+      await scheduleSmartReminders(dog.id);
+    }
   }
 
   async function handleSaveReminderTimes() {
-    await saveReminderTimes(reminderTimes.map(({ id, hour, minute }) => ({ id, hour, minute })));
-    if (dog) await scheduleSmartReminders(dog.id);
+    const times = reminderTimes.map(({ id, hour, minute }) => ({ id, hour, minute }));
+
+    if (useCustomTimes && dog) {
+      await saveDogReminderTimes(dog.id, times);
+      await scheduleSmartReminders(dog.id); // only this dog is affected
+    } else {
+      await saveGlobalReminderTimes(times);
+      await scheduleRemindersForAllDogs(); // dogs WITHOUT their own override pick this up; dogs with one keep theirs
+    }
+
     setRemindersSaved(true);
     setTimeout(() => setRemindersSaved(false), 2000);
   }
@@ -105,7 +134,19 @@ function Settings() {
         </button>
       )}
 
-      <p className="settings-section-label">Reminder times</p>
+      <p className="settings-section-label">
+        Reminder times {dog ? `for ${dog.name}` : ''}
+      </p>
+
+      <label className="custom-times-toggle">
+        <input
+          type="checkbox"
+          checked={useCustomTimes}
+          onChange={(e) => handleToggleCustom(e.target.checked)}
+        />
+        Use custom times just for {dog?.name || 'this dog'}
+      </label>
+
       <div className="reminder-time-list">
         {reminderTimes.map((r) => (
           <div className="reminder-time-row" key={r.id}>
@@ -113,7 +154,7 @@ function Settings() {
             <input
               id={`reminder-${r.id}`}
               type="time"
-              value={toTimeInputValue(r.hour, r.minute)}
+              value={`${String(r.hour).padStart(2, '0')}:${String(r.minute).padStart(2, '0')}`}
               onChange={(e) => handleTimeChange(r.id, e.target.value)}
             />
           </div>
@@ -122,8 +163,10 @@ function Settings() {
       <button className="btn btn-primary log-btn" onClick={handleSaveReminderTimes}>Save reminder times</button>
       {remindersSaved && <p className="care-note">Reminder times updated!</p>}
 
-      <p className="settings-footer">
-        <Link to="/profile">← Back to Profile</Link> · <Link to="/about">About this app</Link>
+      <p className="care-note">
+        {useCustomTimes
+          ? `These times apply only to ${dog?.name}.`
+          : "These are the app's default times — they apply to any dog without its own custom times."}
       </p>
     </div>
   );

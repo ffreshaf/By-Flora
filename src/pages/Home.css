@@ -457,3 +457,19 @@ main > .care-card:first-child {
   outline: none;
   border-color: var(--gold);
 }
+
+.custom-times-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--ink);
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+
+.custom-times-toggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--gold);
+}
