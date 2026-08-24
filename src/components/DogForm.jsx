@@ -12,6 +12,8 @@ function DogForm({ initialDog, onSave }) {
   const [kcalPer100g, setKcalPer100g] = useState(initialDog?.kcalPer100g || 350);
   const [weightGoal, setWeightGoal] = useState(initialDog?.weightGoal || 'maintain');
   const [targetWeightKg, setTargetWeightKg] = useState(initialDog?.targetWeightKg || '');
+  const [foodOverride, setFoodOverride] = useState(initialDog?.foodOverrideGrams ?? '');
+  const [exerciseOverride, setExerciseOverride] = useState(initialDog?.exerciseOverrideMinutes ?? '');
   const [error, setError] = useState('');
 
   const handleSubmit = (e) => {
@@ -39,7 +41,9 @@ function DogForm({ initialDog, onSave }) {
       activityLevel,
       kcalPer100g: Number(kcalPer100g),
       weightGoal,
-      targetWeightKg: targetWeightKg ? Number(targetWeightKg) : null
+      targetWeightKg: targetWeightKg ? Number(targetWeightKg) : null,
+      foodOverrideGrams: foodOverride ? Number(foodOverride) : null,
+      exerciseOverrideMinutes: exerciseOverride ? Number(exerciseOverride) : null
     });
   };
 
@@ -135,6 +139,31 @@ function DogForm({ initialDog, onSave }) {
             placeholder="e.g. 350"
         />
         <small>Check your dog food bag — usually listed as kcal/100g or kcal/cup.</small>
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="foodOverride">Override daily food (g) — optional</label>
+        <input
+          id="foodOverride"
+          type="number"
+          min="0"
+          value={foodOverride}
+          onChange={(e) => setFoodOverride(e.target.value)}
+          placeholder="Leave blank to use the calculated amount"
+        />
+        <small>Use this if your vet gave you a specific target.</small>
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="exerciseOverride">Override daily exercise (min) — optional</label>
+        <input
+          id="exerciseOverride"
+          type="number"
+          min="0"
+          value={exerciseOverride}
+          onChange={(e) => setExerciseOverride(e.target.value)}
+          placeholder="Leave blank to use the calculated amount"
+        />
       </div>
 
       {error && <p className="form-error">{error}</p>}

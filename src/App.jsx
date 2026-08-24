@@ -27,13 +27,14 @@ import Meals from './pages/Meals.jsx';
 import Activity from './pages/Activity.jsx';
 import Baths from './pages/Baths.jsx';
 import About from './pages/About.jsx';
+import Profile from './pages/Profile.jsx';
 
 const NAV_ITEMS = [
   { to: '/', end: true, icon: '🏠', label: 'Home' },
   { to: '/meals', icon: '🍖', label: 'Meals' },
   { to: '/activity', icon: '🐾', label: 'Activity' },
   { to: '/baths', icon: '🛁', label: 'Baths' },
-  { to: '/settings', icon: '⚙️', label: 'Settings' },
+  { to: '/profile', icon: '👤', label: 'Profile' },
 ];
 
 const SWIPE_ROUTES = NAV_ITEMS.map((item) => item.to);
@@ -61,8 +62,7 @@ function App() {
       await setupActionTypes();
 
       // Find the current dog.
-      const dogs = await getAllDogs();
-      const dog = dogs[0];
+      const dog = await getActiveDog();
 
       // Schedule the reminders.
       if (dog) {
@@ -217,8 +217,9 @@ function App() {
             <Route path="/meals" element={<Meals />} />
             <Route path="/activity" element={<Activity />} />
             <Route path="/baths" element={<Baths />} />
-            <Route path="/settings" element={<Settings />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="/about" element={<About />} />
+            <Route path="/settings" element={<Settings />} />
           </Routes>
         </div>
       </main>

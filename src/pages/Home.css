@@ -377,3 +377,83 @@ main > .care-card:first-child {
 .about-list li:last-child {
   border-bottom: none;
 }
+
+.dog-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.dog-pill {
+  background: white;
+  border: 2px solid var(--sage);
+  color: var(--pine);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dog-pill.active {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: white;
+}
+
+.dog-pill-add {
+  border-style: dashed;
+  color: var(--sage);
+}
+
+.settings-section-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--sage);
+  text-align: left;
+  margin: 16px 0 4px;
+}
+
+.settings-section-label:first-of-type {
+  margin-top: 0;
+}
+
+.reminder-time-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.reminder-time-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+
+.reminder-time-row label {
+  font-size: 0.82rem;
+  color: var(--ink);
+}
+
+.reminder-time-row input[type="time"] {
+  border: 2px solid rgba(138, 154, 135, 0.4);
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.85rem;
+  color: var(--pine);
+  background: var(--paper);
+}
+
+.reminder-time-row input[type="time"]:focus {
+  outline: none;
+  border-color: var(--gold);
+}

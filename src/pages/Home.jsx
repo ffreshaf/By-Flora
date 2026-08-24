@@ -10,7 +10,7 @@ import { PLAY_TARGET } from '../utils/reminders.js';
 import './Home.css';
 
 function Home() {
-  const { dog, loading } = useDog();
+  const { dog, allDogs, loading, switchDog } = useDog();
   const [events, setEvents] = useState([]);
 
   useEffect(() => {
@@ -36,34 +36,52 @@ function Home() {
   const { gramsPerDay, mealsPerDay, gramsPerMeal, goalNote } = calculateDailyFood(dog);
   const { minutesPerDay, sessions, minutesPerSession, note } = calculateExerciseMinutes(dog);
 
+  const finalGramsPerDay = dog.foodOverrideGrams ?? gramsPerDay;
+  const finalGramsPerMeal = Math.round(finalGramsPerDay / mealsPerDay);
+  const finalMinutesPerDay = dog.exerciseOverrideMinutes ?? minutesPerDay;
+
   const todayEvents = events.filter((e) => e.timestamp >= startOfToday());
   const feedToday = todayEvents.filter((e) => e.type === 'feed').length;
   const walkMinutesToday = todayEvents.filter((e) => e.type === 'walk').reduce((s, e) => s + (e.durationMinutes || 0), 0);
   const playMinutesToday = todayEvents.filter((e) => e.type === 'play').reduce((s, e) => s + (e.durationMinutes || 0), 0);
 
   const feedProgress = mealsPerDay > 0 ? Math.min(feedToday / mealsPerDay, 1) : 0;
-  const walkProgress = minutesPerDay > 0 ? Math.min(walkMinutesToday / minutesPerDay, 1) : 0;
+  const walkProgress = finalMinutesPerDay > 0 ? Math.min(walkMinutesToday / finalMinutesPerDay, 1) : 0;
   const playProgress = PLAY_TARGET > 0 ? Math.min(playMinutesToday / PLAY_TARGET, 1) : 0;
   const overallProgress = (feedProgress + walkProgress + playProgress) / 3;
 
   return (
     <div className="care-card">
+      {allDogs.length > 1 && (
+        <div className="dog-switcher">
+          {allDogs.map((d) => (
+            <button
+              key={d.id}
+              className={`dog-pill ${dog.id === d.id ? 'active' : ''}`}
+              onClick={() => switchDog(d.id)}
+            >
+              {d.name}
+            </button>
+          ))}
+        </div>
+      )}
+
       <CareRing name={dog.name} progress={overallProgress} />
       <h2>{dog.name}</h2>
 
       <div className="highlight-grid">
         <div className="highlight-card">
           <span className="highlight-label">Food</span>
-          <span className="highlight-value">{mealsPerDay}× {gramsPerMeal}g</span>
-          <span className="highlight-detail">{gramsPerDay}g/day</span>
+          <span className="highlight-value">{mealsPerDay}× {finalGramsPerMeal}g</span>
+          <span className="highlight-detail">{finalGramsPerDay}g/day{dog.foodOverrideGrams ? ' · custom' : ''}</span>
         </div>
         <div className="highlight-card">
           <span className="highlight-label">Exercise</span>
           <span className="highlight-value">
-            {sessions ? `${sessions}× ${minutesPerSession}m` : `${minutesPerDay}m`}
+            {sessions ? `${sessions}× ${minutesPerSession}m` : `${finalMinutesPerDay}m`}
           </span>
           <span className="highlight-detail">
-            {sessions ? `${minutesPerDay} min/day` : 'walk or split up'}
+            {sessions ? `${finalMinutesPerDay} min/day` : 'walk or split up'}{dog.exerciseOverrideMinutes ? ' · custom' : ''}
           </span>
         </div>
         <div className="highlight-card">
