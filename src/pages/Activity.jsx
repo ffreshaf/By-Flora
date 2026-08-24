@@ -5,6 +5,7 @@ import { calculateExerciseMinutes } from '../utils/exercise.js';
 import { startOfToday, PLAY_TARGET } from '../utils/reminders.js';
 import { formatEventTime } from '../utils/format.js';
 import LogControls from '../components/LogControls.jsx';
+import { scheduleSmartReminders } from '../utils/notifications.js';
 import './Home.css';
 
 function Activity() {
@@ -23,6 +24,7 @@ function Activity() {
   async function handleLog(type, minutes) {
     await logCareEvent(dog.id, type, minutes);
     await loadEvents();
+    await scheduleSmartReminders(dog.id);
   }
 
   if (loading) return <p>Loading...</p>;

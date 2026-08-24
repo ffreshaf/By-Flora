@@ -1,9 +1,10 @@
 import { Routes, Route, NavLink } from 'react-router-dom'
+import { App as CapacitorApp } from '@capacitor/app';
 import { useEffect, useState } from 'react';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { logCareEvent } from './db/careEvents.js';
 import { getAllDogs } from './db/dogs.js';
-import { requestNotificationPermission, setupActionTypes, scheduleDailyReminders } from './utils/notifications.js';
+import { requestNotificationPermission, setupActionTypes, scheduleSmartReminders } from './utils/notifications.js';
 import './App.css'
 import Home from './pages/Home.jsx'
 import Settings from './pages/Settings.jsx'
@@ -32,18 +33,20 @@ function App() {
     if (!granted) return;
 
     await setupActionTypes();
-    await scheduleDailyReminders();
+
+    const dogs = await getAllDogs();
+    const dog = dogs[0];
+    if (dog) await scheduleSmartReminders(dog.id);
 
     LocalNotifications.addListener('localNotificationActionPerformed', async (action) => {
       if (action.actionId === 'yes') {
         const careType = action.notification.extra?.careType;
-        const dogs = await getAllDogs();
-        const dog = dogs[0];
         if (dog && careType) {
           await logCareEvent(dog.id, careType, careType === 'feed' ? null : 20);
+          await scheduleSmartReminders(dog.id); // re-check and cancel any now-satisfied reminders
         }
       }
-      // 'no' just dismisses — nothing to log
+      CapacitorApp.minimizeApp();
     });
   }
 

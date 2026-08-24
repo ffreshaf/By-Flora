@@ -4,6 +4,7 @@ import { logCareEvent, getEventsForDog } from '../db/careEvents.js';
 import { calculateDailyFood } from '../utils/food.js';
 import { startOfToday } from '../utils/reminders.js';
 import { formatEventTime } from '../utils/format.js';
+import { scheduleSmartReminders } from '../utils/notifications.js';
 import './Home.css';
 
 function Meals() {
@@ -22,6 +23,7 @@ function Meals() {
   async function handleLog() {
     await logCareEvent(dog.id, 'feed');
     await loadEvents();
+    await scheduleSmartReminders(dog.id);
   }
 
   if (loading) return <p>Loading...</p>;
