@@ -30,12 +30,14 @@ import Meals from './pages/Meals.jsx';
 import Activity from './pages/Activity.jsx';
 import Baths from './pages/Baths.jsx';
 import About from './pages/About.jsx';
+import History from './pages/History.jsx';
 
 const NAV_ITEMS = [
   { to: '/', end: true, icon: '🏠', label: 'Home' },
   { to: '/meals', icon: '🍖', label: 'Meals' },
   { to: '/activity', icon: '🐾', label: 'Activity' },
   { to: '/baths', icon: '🛁', label: 'Baths' },
+  { to: '/history', icon: '📊', label: 'History' },
   { to: '/profile', icon: '👤', label: 'Profile' },
 ];
 
@@ -188,6 +190,7 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/about" element={<About />} />
+            <Route path="/history" element={<History />} />
           </Routes>
         </div>
       </main>
