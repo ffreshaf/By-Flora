@@ -129,7 +129,12 @@ function Settings() {
 
       <DogForm key={addingNew ? 'new' : dog?.id} initialDog={addingNew ? null : dog} onSave={handleSave} />
 
-      {saved && <p className="care-note">Saved!</p>}
+      {saved && (
+        <div className="save-confirmation">
+          <span className="save-check">✓</span>
+          <span>Profile saved</span>
+        </div>
+      )}
 
       {dog && !addingNew && (
         <button className="btn btn-secondary" onClick={handleDelete} style={{ marginTop: '10px', marginBottom: '4px' }}>
@@ -164,13 +169,23 @@ function Settings() {
         ))}
       </div>
       <button className="btn btn-primary log-btn" onClick={handleSaveReminderTimes}>Save reminder times</button>
-      {remindersSaved && <p className="care-note">Reminder times updated!</p>}
+      
+      {remindersSaved && (
+        <div className="save-confirmation">
+          <span className="save-check">✓</span>
+          <span>Reminder times updated</span>
+        </div>
+      )}
 
       <p className="care-note">
         {useCustomTimes
           ? `These times apply only to ${dog?.name}.`
           : "These are the app's default times — they apply to any dog without its own custom times."}
       </p>
+
+      <Link to="/about" className="btn btn-secondary about-btn">
+        About By Flora
+      </Link>
     </div>
   );
 }

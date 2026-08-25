@@ -1,5 +1,11 @@
 {
   "appId": "com.flora.app",
   "appName": "by-flora",
-  "webDir": "dist"
+  "webDir": "dist",
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_notification",
+      "iconColor": "#DD7A3E"
+    }
+  }
 }

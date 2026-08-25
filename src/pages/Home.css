@@ -473,3 +473,50 @@ main > .care-card:first-child {
   height: 16px;
   accent-color: var(--gold);
 }
+
+.about-btn {
+  display: inline-block;
+  margin-top: 8px;
+  text-decoration: none;
+}
+
+.save-confirmation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: fit-content;
+  margin: 8px auto 12px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(138, 154, 135, 0.12);
+  color: var(--pine);
+  font-size: 0.72rem;
+  font-weight: 600;
+  animation: save-confirmation-in 0.2s ease-out;
+}
+
+.save-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: var(--sage);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+@keyframes save-confirmation-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
