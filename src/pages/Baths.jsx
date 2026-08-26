@@ -28,7 +28,7 @@ function Baths() {
 
   const status = getBathStatus(
     events[0]?.timestamp,
-    dog.bathIntervalDays
+    dog.bathIntervalDays || 28
   );
 
   return (
@@ -41,7 +41,7 @@ function Baths() {
       </div>
 
       <p className="care-note">
-        Every {dog.bathIntervalDays ?? 28} days
+        Every {dog.bathIntervalDays || 28} days
       </p>
 
       <button className="btn btn-primary log-btn" onClick={handleLog}>Log a bath</button>

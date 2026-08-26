@@ -5,15 +5,29 @@ import { addDog, updateDog, deleteDog } from '../db/dogs.js';
 import {
   scheduleSmartReminders,
   scheduleRemindersForAllDogs,
+  scheduleCustomReminder,
+  scheduleCustomRemindersForDog,
   getGlobalReminderSlots,
   getReminderSlotsForDog,
   saveGlobalReminderTimes,
   saveDogReminderTimes,
   clearDogReminderOverride,
-  cancelRemindersForDog
+  cancelRemindersForDog,
+  customReminderNotificationId
 } from '../utils/notifications.js';
 import DogForm from '../components/DogForm.jsx';
 import './Home.css';
+
+import { LocalNotifications } from '@capacitor/local-notifications';
+
+import {
+  addReminder,
+  updateReminder,
+  deleteReminder,
+  getRemindersForDog
+} from '../db/reminders.js';
+
+import ReminderForm from '../components/ReminderForm.jsx';
 
 function toTimeInputValue(hour, minute) {
   return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
@@ -32,6 +46,83 @@ function Settings() {
   const [reminderTimes, setReminderTimes] = useState([]);
   const [useCustomTimes, setUseCustomTimes] = useState(false);
   const [remindersSaved, setRemindersSaved] = useState(false);
+
+  const [customReminders, setCustomReminders] = useState([]);
+  const [addingReminder, setAddingReminder] = useState(false);
+  const [editingReminder, setEditingReminder] = useState(null); 
+
+  useEffect(() => {
+    if (dog) {
+      loadCustomReminders();
+    } else {
+      setCustomReminders([]);
+    }
+  }, [dog?.id]);
+
+  async function loadCustomReminders() {
+    const reminders = await getRemindersForDog(dog.id);
+    setCustomReminders(reminders);
+  }
+
+  async function handleAddReminder(reminderData) {
+    if (!dog) return;
+
+    try {
+      const reminderId = await addReminder({
+        dogId: dog.id,
+        ...reminderData,
+        createdAt: Date.now()
+      });
+
+      const savedReminder = {
+        id: reminderId,
+        dogId: dog.id,
+        ...reminderData
+      };
+
+      await scheduleCustomReminder(savedReminder, dog);
+
+      await loadCustomReminders();
+      setAddingReminder(false);
+    } catch (error) {
+      console.error('Failed to add reminder:', error);
+      alert('Could not add reminder. Check the console for details.');
+    }
+  }
+
+  async function handleUpdateReminder(reminderData) {
+    if (!editingReminder) return;
+
+    await updateReminder(
+      editingReminder.id,
+      reminderData
+    );
+
+    await scheduleCustomRemindersForDog(dog.id);
+
+    await loadCustomReminders();
+
+    setEditingReminder(null);
+  }
+
+  async function handleDeleteReminder(id) {
+    if (!confirm('Delete this reminder?')) return;
+
+    try {
+      await LocalNotifications.cancel({
+        notifications: [
+          {
+            id: customReminderNotificationId(id)
+          }
+        ]
+      });
+
+      await deleteReminder(id);
+      await loadCustomReminders();
+    } catch (error) {
+      console.error('Failed to delete reminder:', error);
+    }
+  }
 
   useEffect(() => {
     if (dog) loadReminderTimesForDog();
@@ -182,6 +273,78 @@ function Settings() {
           ? `These times apply only to ${dog?.name}.`
           : "These are the app's default times — they apply to any dog without its own custom times."}
       </p>
+
+      <p className="settings-section-label">
+        Custom reminders {dog ? `for ${dog.name}` : ''}
+      </p>
+
+      {dog && (
+        <>
+          {customReminders.length === 0 && !addingReminder && (
+            <p className="care-note">
+              No custom reminders yet.
+            </p>
+          )}
+
+          <div className="custom-reminder-list">
+            {customReminders.map((reminder) => (
+              <div
+                className="custom-reminder-card"
+                key={reminder.id}
+              >
+                <div>
+                  <strong>{reminder.title}</strong>
+
+                  <small>
+                    {reminder.repeats
+                      ? `Every ${reminder.intervalDays} days`
+                      : `Once on ${reminder.date}`
+                    }
+                    {' · '}
+                    {reminder.time}
+                  </small>
+                </div>
+
+                <div className="custom-reminder-actions">
+                  <button
+                    className="btn btn-secondary btn-small"
+                    onClick={() => setEditingReminder(reminder)}
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    className="dog-photo-remove"
+                    onClick={() => handleDeleteReminder(reminder.id)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {addingReminder ? (
+            <ReminderForm
+              onSave={handleAddReminder}
+              onCancel={() => setAddingReminder(false)}
+            />
+          ) : editingReminder ? (
+            <ReminderForm
+              initialReminder={editingReminder}
+              onSave={handleUpdateReminder}
+              onCancel={() => setEditingReminder(null)}
+            />
+          ) : (
+            <button
+              className="btn btn-primary custom-reminder-add-btn"
+              onClick={() => setAddingReminder(true)}
+            >
+              + Add reminder
+            </button>
+          )}
+        </>
+      )}
 
       <Link to="/about" className="btn btn-secondary about-btn">
         About By Flora

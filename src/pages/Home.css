@@ -111,6 +111,8 @@ main > .care-card:first-child {
   background: transparent;
   color: var(--pine);
   border: 2px solid var(--sage);
+  align-self: center;
+  width:fit-content
 }
 
 .log-btn {
@@ -497,8 +499,9 @@ main > .care-card:first-child {
 }
 
 .about-btn {
-  display: inline-block;
-  margin-top: 8px;
+  display: block;
+  width: fit-content;
+  margin: 12px auto 0;
   text-decoration: none;
 }
 
@@ -919,4 +922,55 @@ main > .care-card:first-child {
 
 .dog-photo-remove:hover {
   text-decoration: underline;
+}
+
+.custom-reminder-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.custom-reminder-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: white;
+  border-radius: 10px;
+  padding: 11px 12px;
+  text-align: left;
+}
+
+.custom-reminder-card > div:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.custom-reminder-card strong {
+  font-size: 0.82rem;
+  color: var(--pine);
+}
+
+.custom-reminder-card small {
+  font-size: 0.68rem;
+  color: var(--sage);
+}
+
+.custom-reminder-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.custom-reminder-actions .btn-small {
+  margin: 0;
+}
+
+.custom-reminder-add-btn {
+  display: block;
+  margin: 12px auto;
 }

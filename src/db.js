@@ -14,3 +14,10 @@ db.version(2).stores({
   careEvents: '++id, dogId, type, timestamp',
   appSettings: '&key' // simple key-value store for app-level settings
 });
+
+db.version(3).stores({
+  dogs: '++id',
+  careEvents: '++id, dogId, type, timestamp',
+  settings: 'key',
+  reminders: '++id, dogId, enabled'
+});

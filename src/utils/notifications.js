@@ -3,6 +3,7 @@ import { getEventsForDog } from '../db/careEvents.js';
 import { startOfToday } from './reminders.js';
 import { getSetting, setSetting } from '../db/settings.js';
 import { getAllDogs, getDog, updateDog } from '../db/dogs.js';
+import { getRemindersForDog } from '../db/reminders.js';
 
 export async function requestNotificationPermission() {
   const result = await LocalNotifications.requestPermissions();
@@ -98,6 +99,79 @@ function getNextReminderDate(hour, minute) {
   return next;
 }
 
+function getReminderDate(reminder) {
+  const [hour, minute] = reminder.time.split(':').map(Number);
+
+  const date = new Date();
+
+  if (reminder.repeats) {
+    date.setHours(hour, minute, 0, 0);
+
+    if (date <= new Date()) {
+      date.setDate(date.getDate() + reminder.intervalDays);
+    }
+
+    return date;
+  }
+
+  const [year, month, day] = reminder.date.split('-').map(Number);
+
+  date.setFullYear(year);
+  date.setMonth(month - 1);
+  date.setDate(day);
+  date.setHours(hour, minute, 0, 0);
+
+  return date;
+}
+
+export function customReminderNotificationId(reminderId) {
+  return 1000000 + Number(reminderId);
+}
+
+export async function scheduleCustomReminder(reminder, dog) {
+  const notificationId =
+    customReminderNotificationId(reminder.id);
+
+  const at = getReminderDate(reminder);
+
+  await LocalNotifications.cancel({
+    notifications: [
+      { id: notificationId }
+    ]
+  });
+
+  await LocalNotifications.schedule({
+    notifications: [
+      {
+        id: notificationId,
+        title: reminder.title,
+        body: `${dog.name}'s reminder`,
+        schedule: {
+          at,
+          allowWhileIdle: true
+        },
+        extra: {
+          type: 'custom-reminder',
+          reminderId: reminder.id,
+          dogId: dog.id
+        }
+      }
+    ]
+  });
+}
+
+export async function scheduleCustomRemindersForDog(dogId) {
+  const dog = await getDog(dogId);
+
+  if (!dog) return;
+
+  const reminders = await getRemindersForDog(dogId);
+
+  for (const reminder of reminders) {
+    await scheduleCustomReminder(reminder, dog);
+  }
+}
+
 export function notificationIdFor(dogId, slotId) {
   return dogId * 100 + slotId;
 }
@@ -138,6 +212,8 @@ export async function scheduleSmartReminders(dogId) {
   if (toSchedule.length > 0) {
     await LocalNotifications.schedule({ notifications: toSchedule });
   }
+
+  await scheduleCustomRemindersForDog(dogId);
 }
 
 export async function scheduleRemindersForAllDogs() {

@@ -96,7 +96,7 @@ function DogForm({ initialDog, onSave }) {
   );
 
   const [bathIntervalDays, setBathIntervalDays] = useState(
-    initialDog?.bathIntervalDays ?? 28
+    initialDog?.bathIntervalDays || 28
   );
 
   const [error, setError] = useState('');
@@ -474,7 +474,7 @@ function DogForm({ initialDog, onSave }) {
 
       <div className="form-group">
         <label htmlFor="bathInterval">
-          Bath every
+          Bath frequency (days) — optional
         </label>
 
         <div className="input-with-suffix">
@@ -485,12 +485,12 @@ function DogForm({ initialDog, onSave }) {
             max="365"
             value={bathIntervalDays}
             onChange={(e) => setBathIntervalDays(e.target.value)}
+            placeholder="e.g. 28"
           />
-          <span>days</span>
         </div>
 
         <small>
-          Choose how often {name || 'your dog'} usually needs a bath.
+          Choose how often {name || 'your dog'} should have a bath.
         </small>
       </div>
 
