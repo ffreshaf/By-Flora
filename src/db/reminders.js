@@ -23,3 +23,30 @@ export async function getRemindersForDog(dogId) {
     .equals(dogId)
     .toArray();
 }
+
+export async function removeExpiredOneTimeReminders(dogId) {
+  const reminders = await getRemindersForDog(dogId);
+
+  const now = new Date();
+
+  for (const reminder of reminders) {
+    if (!reminder.repeats && reminder.date) {
+      const [year, month, day] = reminder.date.split('-').map(Number);
+      const [hour, minute] = reminder.time.split(':').map(Number);
+
+      const reminderDate = new Date(
+        year,
+        month - 1,
+        day,
+        hour,
+        minute,
+        0,
+        0
+      );
+
+      if (reminderDate <= now) {
+        await deleteReminder(reminder.id);
+      }
+    }
+  }
+}

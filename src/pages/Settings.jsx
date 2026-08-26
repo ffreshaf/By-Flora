@@ -24,7 +24,8 @@ import {
   addReminder,
   updateReminder,
   deleteReminder,
-  getRemindersForDog
+  getRemindersForDog,
+  removeExpiredOneTimeReminders
 } from '../db/reminders.js';
 
 import ReminderForm from '../components/ReminderForm.jsx';
@@ -60,6 +61,8 @@ function Settings() {
   }, [dog?.id]);
 
   async function loadCustomReminders() {
+    await removeExpiredOneTimeReminders(dog.id);
+
     const reminders = await getRemindersForDog(dog.id);
     setCustomReminders(reminders);
   }

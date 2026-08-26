@@ -102,13 +102,13 @@ function getNextReminderDate(hour, minute) {
 function getReminderDate(reminder) {
   const [hour, minute] = reminder.time.split(':').map(Number);
 
-  const date = new Date();
-
   if (reminder.repeats) {
+    const date = new Date();
+
     date.setHours(hour, minute, 0, 0);
 
     if (date <= new Date()) {
-      date.setDate(date.getDate() + reminder.intervalDays);
+      date.setDate(date.getDate() + Number(reminder.intervalDays));
     }
 
     return date;
@@ -116,12 +116,15 @@ function getReminderDate(reminder) {
 
   const [year, month, day] = reminder.date.split('-').map(Number);
 
-  date.setFullYear(year);
-  date.setMonth(month - 1);
-  date.setDate(day);
-  date.setHours(hour, minute, 0, 0);
-
-  return date;
+  return new Date(
+    year,
+    month - 1,
+    day,
+    hour,
+    minute,
+    0,
+    0
+  );
 }
 
 export function customReminderNotificationId(reminderId) {
