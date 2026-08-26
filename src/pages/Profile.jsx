@@ -41,10 +41,26 @@ function Profile() {
         </div>
       )}
 
-      <CareRing name={dog.name} />
-      <h2>{dog.name}</h2>
+      <CareRing 
+        name={dog.name} 
+        photo={dog.photo} 
+      />
+      
+      <div className="profile-identity">
+      <div>
+        <h2>{dog.name}</h2>
+
+        {dog.breed && (
+          <p className="profile-breed">
+            {dog.breed}
+          </p>
+        )}
+      </div>
+
+      </div>
 
       <ul className="stat-list">
+        {dog.breed && <li>Breed <span>{dog.breed}</span></li>}
         <li>Age <span>{dog.ageMonths} mo</span></li>
         <li>Weight <span>{dog.weightKg} kg</span></li>
         <li>Size <span>{dog.size}</span></li>

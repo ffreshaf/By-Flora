@@ -139,27 +139,28 @@ function Home() {
   return (
     <div className="home-page">
 
-      {/* DOG SWITCHER */}
-
-      {allDogs.length > 1 && (
-        <div className="dog-switcher">
-          {allDogs.map((d) => (
-            <button
-              key={d.id}
-              className={`dog-pill ${
-                dog.id === d.id ? 'active' : ''
-              }`}
-              onClick={() => switchDog(d.id)}
-            >
-              {d.name}
-            </button>
-          ))}
-        </div>
-      )}
-
       {/* HERO */}
 
       <section className="home-hero">
+
+        {/* DOG SWITCHER */}
+
+        {allDogs.length > 1 && (
+          <div className="dog-switcher">
+            {allDogs.map((d) => (
+              <button
+                key={d.id}
+                className={`dog-pill ${
+                  dog.id === d.id ? 'active' : ''
+                }`}
+                onClick={() => switchDog(d.id)}
+              >
+                {d.name}
+              </button>
+            ))}
+          </div>
+        )}
+
         <p className="home-greeting">
           {greeting} ☀️
         </p>
@@ -172,6 +173,7 @@ function Home() {
 
         <CareRing
           name={dog.name}
+          photo={dog.photo}
           progress={overallProgress}
         />
 
