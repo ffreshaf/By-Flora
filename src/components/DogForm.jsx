@@ -95,6 +95,10 @@ function DogForm({ initialDog, onSave }) {
     initialDog?.exerciseOverrideMinutes ?? ''
   );
 
+  const [bathIntervalDays, setBathIntervalDays] = useState(
+    initialDog?.bathIntervalDays ?? 28
+  );
+
   const [error, setError] = useState('');
 
   const [photoError, setPhotoError] = useState('');
@@ -153,21 +157,15 @@ function DogForm({ initialDog, onSave }) {
 
     onSave({
       name: name.trim(),
-
       breed: breed.trim(),
-
       photo,
 
       ageMonths: Number(ageMonths),
-
       weightKg: Number(weightKg),
-
       size,
-
       activityLevel,
 
       kcalPer100g: Number(kcalPer100g),
-
       weightGoal,
 
       targetWeightKg: targetWeightKg
@@ -180,7 +178,9 @@ function DogForm({ initialDog, onSave }) {
 
       exerciseOverrideMinutes: exerciseOverride
         ? Number(exerciseOverride)
-        : null
+        : null,
+
+      bathIntervalDays: Number(bathIntervalDays)
     });
   };
 
@@ -470,6 +470,28 @@ function DogForm({ initialDog, onSave }) {
           placeholder="Leave blank to use the calculated amount"
         />
 
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="bathInterval">
+          Bath every
+        </label>
+
+        <div className="input-with-suffix">
+          <input
+            id="bathInterval"
+            type="number"
+            min="1"
+            max="365"
+            value={bathIntervalDays}
+            onChange={(e) => setBathIntervalDays(e.target.value)}
+          />
+          <span>days</span>
+        </div>
+
+        <small>
+          Choose how often {name || 'your dog'} usually needs a bath.
+        </small>
       </div>
 
       {error && (

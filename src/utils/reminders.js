@@ -12,17 +12,45 @@ export function daysSince(timestamp) {
   return Math.floor((Date.now() - timestamp) / (1000 * 60 * 60 * 24));
 }
 
-export function getBathStatus(lastBathTimestamp) {
-  const since = daysSince(lastBathTimestamp);
-  if (since === null) {
-    return { isDue: true, message: 'No bath logged yet' };
+export function getBathStatus(lastBathTimestamp, intervalDays = 28) {
+  if (!lastBathTimestamp) {
+    return {
+      isDue: true,
+      message: 'No bath logged yet'
+    };
   }
-  const dueInDays = BATH_INTERVAL_DAYS - since;
+
+  const lastBath = new Date(lastBathTimestamp);
+  const nextBath = new Date(lastBath);
+
+  nextBath.setDate(
+    nextBath.getDate() + Number(intervalDays)
+  );
+
+  const now = new Date();
+
+  const diffMs = nextBath - now;
+  const diffDays = Math.ceil(
+    diffMs / (1000 * 60 * 60 * 24)
+  );
+
+  if (diffDays <= 0) {
+    return {
+      isDue: true,
+      message: 'Bath is due'
+    };
+  }
+
+  if (diffDays === 1) {
+    return {
+      isDue: false,
+      message: 'Bath due tomorrow'
+    };
+  }
+
   return {
-    isDue: dueInDays <= 0,
-    message: dueInDays <= 0
-      ? `Overdue by ${Math.abs(dueInDays)} day${Math.abs(dueInDays) === 1 ? '' : 's'}`
-      : `Due in ${dueInDays} day${dueInDays === 1 ? '' : 's'} · last: ${since}d ago`
+    isDue: false,
+    message: `Bath due in ${diffDays} days`
   };
 }
 

@@ -26,7 +26,10 @@ function Baths() {
   if (loading) return <p>Loading...</p>;
   if (!dog) return <p className="care-note">Set up her profile in Settings first.</p>;
 
-  const status = getBathStatus(events[0]?.timestamp);
+  const status = getBathStatus(
+    events[0]?.timestamp,
+    dog.bathIntervalDays
+  );
 
   return (
     <div className="care-card">
@@ -36,6 +39,10 @@ function Baths() {
         <span className="highlight-label">Status</span>
         <span className="highlight-value highlight-value-small">{status.message}</span>
       </div>
+
+      <p className="care-note">
+        Every {dog.bathIntervalDays ?? 28} days
+      </p>
 
       <button className="btn btn-primary log-btn" onClick={handleLog}>Log a bath</button>
 
