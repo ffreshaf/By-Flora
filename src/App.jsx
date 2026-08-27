@@ -52,81 +52,151 @@ function App() {
   const navigate = useNavigate();
   const touchStart = useRef({ x: 0, y: 0 });
 
-  useEffect(() => {
-    testFirebase();
-  }, []);
+  const { user, household, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    let notificationListener;
+  let notificationListener;
 
-    async function initNotifications() {
-      try {
-        const granted = await requestNotificationPermission();
-        if (!granted) {
-          console.log('Notifications are not permitted');
-          return;
-        }
+  async function initNotifications() {
+    try {
+      // 1. Register the action type
+      await setupActionTypes();
 
-        await setupActionTypes();
+      // 2. REGISTER THE LISTENER FIRST
+      notificationListener = await LocalNotifications.addListener(
+        'localNotificationActionPerformed',
+        async (action) => {
+          console.log(
+            'Notification action received:',
+            JSON.stringify(action)
+          );
 
-        try {
-          await cancelOrphanedReminders();
-        } catch (err) {
-          console.log('cancelOrphanedReminders failed (continuing anyway):', err);
-        }
+          try {
+            if (action.actionId === 'yes') {
+              const { careType, dogId } =
+                action.notification.extra || {};
 
-        try {
-          await scheduleRemindersForAllDogs();
-        } catch (err) {
-          console.log('scheduleRemindersForAllDogs failed (continuing anyway):', err);
-        }
+              console.log('careType:', careType);
+              console.log('dogId:', dogId);
 
-        // This MUST run regardless of whether the steps above succeeded
-        notificationListener = await LocalNotifications.addListener(
-          'localNotificationActionPerformed',
-          async (action) => {
-            console.log('Notification action received:', JSON.stringify(action));
-
-            try {
-              if (action.actionId === 'yes') {
-                const { careType, dogId } = action.notification.extra || {};
-                console.log('careType:', careType, 'dogId:', dogId);
-
-                if (dogId && careType) {
-                  const dog = await getDog(dogId);
-                  console.log('Looked up dog:', dog);
-
-                  if (dog) {
-                    await logCareEvent(dog.id, careType, careType === 'feed' ? null : 20);
-                    console.log('Logged event for', dog.name);
-                    await scheduleSmartReminders(dog.id);
-                  }
-                } else {
-                  console.log('Missing dogId or careType in notification extra data');
-                }
+              if (!dogId || !careType || !household?.id) {
+                console.log(
+                  'Missing dogId, careType, or household ID'
+                );
+                return;
               }
-            } catch (err) {
-              console.log('Error handling notification action:', err);
+
+              const dog = await getDog(
+                household.id,
+                dogId
+              );
+
+              console.log('Looked up dog:', dog);
+
+              if (!dog) {
+                console.log('Dog not found:', dogId);
+                return;
+              }
+
+              // THIS is what actually logs the meal/care event
+              const eventId = await logCareEvent(
+                household.id,
+                dog.id,
+                careType,
+                careType === 'feed' ? null : 20
+              );
+
+              console.log(
+                'Care event logged successfully:',
+                eventId
+              );
+
+              // Recalculate/schedule reminders
+              await scheduleSmartReminders(
+                household.id,
+                dog.id
+              );
+
+              console.log(
+                'Reminder schedule updated for:',
+                dog.name
+              );
             }
-
-            CapacitorApp.minimizeApp();
+          } catch (err) {
+            console.error(
+              'Error handling notification action:',
+              err
+            );
           }
+
+          await CapacitorApp.minimizeApp();
+        }
+      );
+
+      console.log(
+        'Notification listener registered successfully'
+      );
+
+      // 3. NOW request permission
+      const granted = await requestNotificationPermission();
+
+      if (!granted) {
+        console.log(
+          'Notifications are not permitted'
         );
+        return;
+      }
 
-        console.log('Notification listener registered successfully');
+      // 4. NOW do the scheduling
+      if (!household?.id) {
+        console.log(
+          'No household yet, skipping reminder scheduling'
+        );
+        return;
+      }
+
+      try {
+        await cancelOrphanedReminders(
+          household.id
+        );
       } catch (err) {
-        console.log('initNotifications failed entirely:', err);
+        console.log(
+          'cancelOrphanedReminders failed:',
+          err
+        );
       }
+
+      try {
+        await scheduleRemindersForAllDogs(
+          household.id
+        );
+      } catch (err) {
+        console.log(
+          'scheduleRemindersForAllDogs failed:',
+          err
+        );
+      }
+
+    } catch (err) {
+      console.error(
+        'initNotifications failed:',
+        err
+      );
     }
+  }
 
+  // Only initialize when logged in and household exists
+  if (user && household?.id) {
     initNotifications();
+  }
 
-    return () => {
-      if (notificationListener) {
-        notificationListener.remove();
-      }
-    };
-  }, []);
+  return () => {
+    if (notificationListener) {
+      notificationListener.remove();
+      notificationListener = null;
+    }
+  };
+}, [user, household?.id]);
 
   const handleLogoClick = () => {
     setSpinning(true);
@@ -167,8 +237,6 @@ function App() {
   }
 
   const isSwipePage = SWIPE_ROUTES.includes(location.pathname);
-
-  const { user, household, loading: authLoading } = useAuth();
 
   if (authLoading) return <p>Loading...</p>;
   if (!user) return <Login />;

@@ -89,9 +89,9 @@ function Settings() {
   }, [dog?.id]);
 
   async function loadCustomReminders() {
-    await removeExpiredOneTimeReminders(dog.id);
+    await removeExpiredOneTimeReminders(household.id, dog.id);
 
-    const reminders = await getRemindersForDog(dog.id);
+    const reminders = await getRemindersForDog(household.id, dog.id);
     setCustomReminders(reminders);
   }
 
@@ -99,15 +99,16 @@ function Settings() {
     if (!dog) return;
 
     try {
-      const reminderId = await addReminder({
-        dogId: dog.id,
+      const reminderId = await addReminder(
+        household.id,
+        dog.id,
+      {
         ...reminderData,
         createdAt: Date.now()
       });
 
       const savedReminder = {
         id: reminderId,
-        dogId: dog.id,
         ...reminderData
       };
 
@@ -125,11 +126,13 @@ function Settings() {
     if (!editingReminder) return;
 
     await updateReminder(
+      household.id,
+      dog.id,
       editingReminder.id,
       reminderData
     );
 
-    await scheduleCustomRemindersForDog(dog.id);
+    await scheduleCustomRemindersForDog(household.id, dog.id);
 
     await loadCustomReminders();
 
@@ -148,7 +151,7 @@ function Settings() {
         ]
       });
 
-      await deleteReminder(id);
+      await deleteReminder(household.id, dog.id, id);
       await loadCustomReminders();
     } catch (error) {
       console.error('Failed to delete reminder:', error);
@@ -156,19 +159,28 @@ function Settings() {
   }
 
   useEffect(() => {
-    if (dog) loadReminderTimesForDog();
-  }, [dog?.id]);
+    if (dog && household?.id) loadReminderTimesForDog();
+  }, [dog?.id, household?.id]);
 
   async function loadReminderTimesForDog() {
-    if (dog.reminderTimes) {
-      setReminderTimes(await getReminderSlotsForDog(dog.id));
-      setUseCustomTimes(true);
-    } else {
-      setReminderTimes(await getGlobalReminderSlots());
-      setUseCustomTimes(false);
+    if (!dog?.id || !household?.id) return;
+
+    try {
+      const slots = await getReminderSlotsForDog(
+        household.id,
+        dog.id
+      );
+
+      console.log('Loaded reminder slots:', slots);
+
+      setReminderTimes(slots);
+      setUseCustomTimes(!!dog.reminderTimes);
+    } catch (error) {
+      console.error('Failed to load reminder times:', error);
+      setReminderTimes([]);
     }
   }
-
+  
   function handleTimeChange(id, value) {
     const [hour, minute] = value.split(':').map(Number);
     setReminderTimes((prev) => prev.map((r) => (r.id === id ? { ...r, hour, minute } : r)));
@@ -177,21 +189,23 @@ function Settings() {
   async function handleToggleCustom(checked) {
     setUseCustomTimes(checked);
     if (!checked && dog) {
-      await clearDogReminderOverride(dog.id);
-      setReminderTimes(await getGlobalReminderSlots());
-      await scheduleSmartReminders(dog.id);
+      await clearDogReminderOverride(household.id, dog.id);
+      setReminderTimes(await getGlobalReminderSlots(household.id));
+      await scheduleSmartReminders(household.id, dog.id);
     }
   }
 
   async function handleSaveReminderTimes() {
+    if (!household?.id) return;
+
     const times = reminderTimes.map(({ id, hour, minute }) => ({ id, hour, minute }));
 
     if (useCustomTimes && dog) {
-      await saveDogReminderTimes(dog.id, times);
-      await scheduleSmartReminders(dog.id); // only this dog is affected
+      await saveDogReminderTimes(household.id, dog.id, times);
+      await scheduleSmartReminders(household.id, dog.id); // only this dog is affected
     } else {
-      await saveGlobalReminderTimes(times);
-      await scheduleRemindersForAllDogs(); // dogs WITHOUT their own override pick this up; dogs with one keep theirs
+      await saveGlobalReminderTimes(household.id, times);
+      await scheduleRemindersForAllDogs(household.id); // dogs WITHOUT their own override pick this up; dogs with one keep theirs
     }
 
     setRemindersSaved(true);
@@ -199,30 +213,97 @@ function Settings() {
   }
 
   async function handleSave(dogData) {
-    let id;
-    if (dog && !addingNew) {
-      id = await updateDog(household.id, dog.id, dogData);
-    } else {
-      id = await addDog(household.id, dogData);
+    if (!household?.id) {
+      console.error('No household ID available.');
+      return;
     }
-    await switchDog(id);
-    setAddingNew(false);
+    
+    console.log('Saving dog:', {
+    householdId: household.id,
+    existingDogId: dog?.id,
+    addingNew,
+    dogData,
+    photoLength: dogData.photo?.length
+    });
 
     try {
-      await scheduleSmartReminders(id);
-    } catch (error) {
-      console.error('Could not schedule reminders:', error);
-    }
+      let id;
 
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+      if (dog && !addingNew) {
+        console.log('Updating existing dog with ID:', dog.id);
+        
+        await updateDog(
+          household.id,
+          dog.id,
+          dogData
+        );
+
+        id = dog.id;
+        console.log('Dog updated successfully with ID:', id);
+      } else {
+        console.log('Adding new dog with data:', dogData);
+
+        id = await addDog(
+          household.id,
+          dogData
+        );
+
+        console.log('New dog added successfully with ID:', id);
+      }
+
+      console.log('Switching to dog with ID:', id);
+
+      await switchDog(id);
+
+      console.log('Dog switched successfully. ID:', id);
+
+      setAddingNew(false);
+
+      try {
+        await scheduleSmartReminders(
+          household.id,
+          id
+        );
+      } catch (error) {
+        console.error(
+          'Could not schedule reminders:',
+          error
+        );
+      }
+
+      setSaved(true);
+
+      setTimeout(
+        () => setSaved(false),
+        2000
+      );
+
+    } catch (error) {
+      console.error('========== DOG SAVE FAILED ==========');
+    console.error('Error:', error);
+    console.error('Code:', error?.code);
+    console.error('Message:', error?.message);
+    console.error('Stack:', error?.stack);
+    console.error('Household:', household?.id);
+    console.error('Dog:', dog);
+    console.error('Dog data:', dogData);
+    console.error('====================================');
+      console.error(
+        'Failed to save profile:',
+        error
+      );
+
+      alert(
+        'Could not save the profile. Check the console for details.'
+      );
+    }
   }
 
   async function handleDelete() {
     if (!dog) return;
     if (!confirm(`Remove ${dog.name}'s profile? This can't be undone.`)) return;
 
-    await cancelRemindersForDog(dog.id); // cancel BEFORE deleting, while we still know dog.id
+    await cancelRemindersForDog(household.id, dog.id); // cancel BEFORE deleting, while we still know dog.id
     await deleteDog(household.id, dog.id);
     await reload();
   }

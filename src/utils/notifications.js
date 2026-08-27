@@ -1,7 +1,11 @@
 import { LocalNotifications } from '@capacitor/local-notifications';
-import { getEventsForDog } from '../db/careEvents.js';
+
+import { getEventsForDog, logCareEvent } from '../db/careEvents.js';
 import { startOfToday } from './reminders.js';
-import { getSetting, setSetting } from '../db/settings.js';
+import {
+  getHouseholdSetting,
+  setHouseholdSetting
+} from '../db/settings.js';
 import { getAllDogs, getDog, updateDog } from '../db/dogs.js';
 import { getRemindersForDog } from '../db/reminders.js';
 
@@ -24,97 +28,315 @@ export async function setupActionTypes() {
   });
 }
 
-export async function cancelRemindersForDog(dogId) {
-  const slots = await getReminderSlotsForDog(dogId);
-  await LocalNotifications.cancel({
-    notifications: slots.map((slot) => ({ id: notificationIdFor(dogId, slot.id) }))
-  });
+/*
+ * Handles notification button presses.
+ *
+ * "Yes, done" logs the care event in Firestore.
+ *
+ * householdId is passed in from main.jsx because the notification
+ * itself only contains the dogId/careType.
+ */
+export async function setupNotificationActionHandler(getHouseholdId) {
+  await LocalNotifications.addListener(
+    'localNotificationActionPerformed',
+    async (event) => {
+      try {
+        console.log('Notification action received:', event);
+
+        const actionId = event.actionId;
+        const notification = event.notification;
+
+        if (actionId !== 'yes') {
+          console.log('Notification action was not "yes":', actionId);
+          return;
+        }
+
+        const careType = notification.extra?.careType;
+        const dogId = notification.extra?.dogId;
+
+        if (!careType || !dogId) {
+          console.error(
+            'Notification is missing careType or dogId:',
+            notification
+          );
+          return;
+        }
+
+        const householdId = await getHouseholdId();
+
+        if (!householdId) {
+          console.error(
+            'Could not log notification action: no household ID.'
+          );
+          return;
+        }
+
+        console.log('Logging care event from notification:', {
+          householdId,
+          dogId,
+          careType
+        });
+
+        await logCareEvent(
+          householdId,
+          dogId,
+          careType
+        );
+
+        console.log('Care event logged successfully.');
+
+        /*
+         * Reschedule this dog's reminders.
+         *
+         * This is important because scheduleSmartReminders()
+         * checks today's logged events before scheduling.
+         */
+        await scheduleSmartReminders(
+          householdId,
+          dogId
+        );
+
+        console.log(
+          'Reminders rescheduled after notification confirmation.'
+        );
+
+      } catch (error) {
+        console.error(
+          'Failed to handle notification action:',
+          error
+        );
+      }
+    }
+  );
 }
 
 const DEFAULT_SLOTS = [
-  { id: 1, careType: 'feed', hour: 8, minute: 0, title: 'Feeding time 🍖', body: (name) => `Did you feed ${name} yet?` },
-  { id: 2, careType: 'feed', hour: 18, minute: 0, title: 'Feeding time 🍖', body: (name) => `Second meal — did you feed ${name} yet?` },
-  { id: 3, careType: 'walk', hour: 17, minute: 0, title: 'Walk time 🐾', body: (name) => `Have you taken ${name} for a walk today?` }
+  {
+    id: 1,
+    careType: 'feed',
+    hour: 8,
+    minute: 0,
+    title: 'Feeding time 🍖',
+    body: (name) => `Did you feed ${name} yet?`
+  },
+
+  {
+    id: 2,
+    careType: 'feed',
+    hour: 18,
+    minute: 0,
+    title: 'Feeding time 🍖',
+    body: (name) => `Second meal — did you feed ${name} yet?`
+  },
+
+  {
+    id: 3,
+    careType: 'walk',
+    hour: 17,
+    minute: 0,
+    title: 'Walk time 🐾',
+    body: (name) => `Have you taken ${name} for a walk today?`
+  }
 ];
 
 const GLOBAL_REMINDER_TIMES_KEY = 'reminderTimes';
 
 function mergeTimes(overrides) {
   if (!overrides) return DEFAULT_SLOTS;
+
   return DEFAULT_SLOTS.map((slot) => {
-    const override = overrides.find((o) => o.id === slot.id);
-    return override ? { ...slot, hour: override.hour, minute: override.minute } : slot;
+    const override = overrides.find(
+      (o) => o.id === slot.id
+    );
+
+    return override
+      ? {
+          ...slot,
+          hour: override.hour,
+          minute: override.minute
+        }
+      : slot;
   });
 }
 
-// The app-wide default times (used by any dog without its own override)
-export async function getGlobalReminderSlots() {
-  const saved = await getSetting(GLOBAL_REMINDER_TIMES_KEY);
+// =========================
+// REMINDER TIMES
+// =========================
+
+export async function getGlobalReminderSlots(householdId) {
+  const saved = await getHouseholdSetting(
+    householdId,
+    GLOBAL_REMINDER_TIMES_KEY
+  );
+
   return mergeTimes(saved);
 }
 
-export async function saveGlobalReminderTimes(times) {
-  await setSetting(GLOBAL_REMINDER_TIMES_KEY, times);
+export async function saveGlobalReminderTimes(
+  householdId,
+  times
+) {
+  await setHouseholdSetting(
+    householdId,
+    GLOBAL_REMINDER_TIMES_KEY,
+    times
+  );
 }
 
-// The times that actually apply to a SPECIFIC dog — its own override if set, else the global default
-export async function getReminderSlotsForDog(dogId) {
-  const dog = await getDog(dogId);
+export async function getReminderSlotsForDog(
+  householdId,
+  dogId
+) {
+  const dog = await getDog(
+    householdId,
+    dogId
+  );
+
   if (dog?.reminderTimes) {
     return mergeTimes(dog.reminderTimes);
   }
-  return getGlobalReminderSlots();
+
+  return getGlobalReminderSlots(householdId);
 }
 
-export async function saveDogReminderTimes(dogId, times) {
-  await updateDog(dogId, { reminderTimes: times });
+export async function saveDogReminderTimes(
+  householdId,
+  dogId,
+  times
+) {
+  await updateDog(
+    householdId,
+    dogId,
+    {
+      reminderTimes: times
+    }
+  );
 }
 
-export async function clearDogReminderOverride(dogId) {
-  await updateDog(dogId, { reminderTimes: null });
+export async function clearDogReminderOverride(
+  householdId,
+  dogId
+) {
+  await updateDog(
+    householdId,
+    dogId,
+    {
+      reminderTimes: null
+    }
+  );
 }
 
-export async function cancelOrphanedReminders() {
-  const dogs = await getAllDogs();
-  const validDogIds = new Set(dogs.map((d) => d.id));
+// =========================
+// NOTIFICATION IDs
+// =========================
 
-  const pending = await LocalNotifications.getPending();
-  const orphaned = pending.notifications.filter((n) => {
-    const dogId = n.extra?.dogId;
-    return dogId && !validDogIds.has(dogId);
-  });
+export function customReminderNotificationId(reminderId) {
+  const text = String(reminderId);
 
-  if (orphaned.length > 0) {
-    await LocalNotifications.cancel({ notifications: orphaned.map((n) => ({ id: n.id })) });
+  let hash = 0;
+
+  for (let i = 0; i < text.length; i++) {
+    hash =
+      ((hash << 5) - hash) +
+      text.charCodeAt(i);
+
+    hash |= 0;
+  }
+
+  return 1000000 + Math.abs(hash % 900000);
+}
+
+export function notificationIdFor(
+  dogId,
+  slotId
+) {
+  const text = `${dogId}:${slotId}`;
+
+  let hash = 0;
+
+  for (let i = 0; i < text.length; i++) {
+    hash =
+      ((hash << 5) - hash) +
+      text.charCodeAt(i);
+
+    hash |= 0;
+  }
+
+  return 1 + Math.abs(hash % 900000);
+}
+
+// =========================
+// CANCEL
+// =========================
+
+export async function cancelRemindersForDog(
+  householdId,
+  dogId
+) {
+  const slots =
+    await getReminderSlotsForDog(
+      householdId,
+      dogId
+    );
+
+  const reminders =
+    await getRemindersForDog(
+      householdId,
+      dogId
+    );
+
+  const ids = [
+    ...slots.map((slot) => ({
+      id: notificationIdFor(
+        dogId,
+        slot.id
+      )
+    })),
+
+    ...reminders.map((reminder) => ({
+      id: customReminderNotificationId(
+        reminder.id
+      )
+    }))
+  ];
+
+  if (ids.length > 0) {
+    await LocalNotifications.cancel({
+      notifications: ids
+    });
   }
 }
 
-function getNextReminderDate(hour, minute) {
-  const now = new Date();
-  const next = new Date();
-  next.setHours(hour, minute, 0, 0);
-  if (next <= now) {
-    next.setDate(next.getDate() + 1);
-  }
-  return next;
-}
+// =========================
+// CUSTOM REMINDERS
+// =========================
 
 function getReminderDate(reminder) {
-  const [hour, minute] = reminder.time.split(':').map(Number);
+  const [hour, minute] =
+    reminder.time.split(':').map(Number);
 
   if (reminder.repeats) {
     const date = new Date();
 
-    date.setHours(hour, minute, 0, 0);
+    date.setHours(
+      hour,
+      minute,
+      0,
+      0
+    );
 
     if (date <= new Date()) {
-      date.setDate(date.getDate() + Number(reminder.intervalDays));
+      date.setDate(
+        date.getDate() +
+        Number(reminder.intervalDays || 1)
+      );
     }
 
     return date;
   }
 
-  const [year, month, day] = reminder.date.split('-').map(Number);
+  const [year, month, day] =
+    reminder.date.split('-').map(Number);
 
   return new Date(
     year,
@@ -127,101 +349,276 @@ function getReminderDate(reminder) {
   );
 }
 
-export function customReminderNotificationId(reminderId) {
-  return 1000000 + Number(reminderId);
-}
-
-export async function scheduleCustomReminder(reminder, dog) {
+export async function scheduleCustomReminder(
+  reminder,
+  dog
+) {
   const notificationId =
-    customReminderNotificationId(reminder.id);
+    customReminderNotificationId(
+      reminder.id
+    );
 
-  const at = getReminderDate(reminder);
+  const at =
+    getReminderDate(reminder);
 
   await LocalNotifications.cancel({
     notifications: [
-      { id: notificationId }
-    ]
-  });
-
-  await LocalNotifications.schedule({
-    notifications: [
       {
-        id: notificationId,
-        title: reminder.title,
-        body: `${dog.name}'s reminder`,
-        schedule: {
-          at,
-          allowWhileIdle: true
-        },
-        extra: {
-          type: 'custom-reminder',
-          reminderId: reminder.id,
-          dogId: dog.id
-        }
+        id: notificationId
       }
     ]
   });
+
+  const notification = {
+    id: notificationId,
+    title: reminder.title,
+    body: `${dog.name}'s reminder`,
+
+    schedule: {
+      at,
+      allowWhileIdle: true
+    },
+
+    extra: {
+      type: 'custom-reminder',
+      reminderId: reminder.id,
+      dogId: dog.id
+    }
+  };
+
+  await LocalNotifications.schedule({
+    notifications: [notification]
+  });
 }
 
-export async function scheduleCustomRemindersForDog(dogId) {
-  const dog = await getDog(dogId);
+export async function scheduleCustomRemindersForDog(
+  householdId,
+  dogId
+) {
+  const dog =
+    await getDog(
+      householdId,
+      dogId
+    );
 
   if (!dog) return;
 
-  const reminders = await getRemindersForDog(dogId);
+  const reminders =
+    await getRemindersForDog(
+      householdId,
+      dogId
+    );
 
   for (const reminder of reminders) {
-    await scheduleCustomReminder(reminder, dog);
+    await scheduleCustomReminder(
+      reminder,
+      dog
+    );
   }
 }
 
-export function notificationIdFor(dogId, slotId) {
-  return dogId * 100 + slotId;
+// =========================
+// SMART REMINDERS
+// =========================
+
+function getNextReminderDate(
+  hour,
+  minute
+) {
+  const now = new Date();
+
+  const next = new Date();
+
+  next.setHours(
+    hour,
+    minute,
+    0,
+    0
+  );
+
+  if (next <= now) {
+    next.setDate(
+      next.getDate() + 1
+    );
+  }
+
+  return next;
 }
 
-export async function scheduleSmartReminders(dogId) {
-  const dog = await getDog(dogId);
+export async function scheduleSmartReminders(
+  householdId,
+  dogId
+) {
+  const dog =
+    await getDog(
+      householdId,
+      dogId
+    );
+
   if (!dog) return;
 
-  const slots = await getReminderSlotsForDog(dogId);
+  const slots =
+    await getReminderSlotsForDog(
+      householdId,
+      dogId
+    );
 
-  const events = await getEventsForDog(dogId);
-  const todayEvents = events.filter((e) => e.timestamp >= startOfToday());
-  const feedCountToday = todayEvents.filter((e) => e.type === 'feed').length;
-  const walkedToday = todayEvents.some((e) => e.type === 'walk');
+  const events =
+    await getEventsForDog(
+      householdId,
+      dogId
+    );
+
+  const todayEvents =
+    events.filter(
+      (e) =>
+        e.timestamp >=
+        startOfToday()
+    );
+
+  const feedCountToday =
+    todayEvents.filter(
+      (e) => e.type === 'feed'
+    ).length;
+
+  const walkedToday =
+    todayEvents.some(
+      (e) => e.type === 'walk'
+    );
 
   await LocalNotifications.cancel({
-    notifications: slots.map((slot) => ({ id: notificationIdFor(dogId, slot.id) }))
+    notifications:
+      slots.map((slot) => ({
+        id: notificationIdFor(
+          dogId,
+          slot.id
+        )
+      }))
   });
 
   const toSchedule = [];
 
   for (const slot of slots) {
-    if (slot.careType === 'feed' && feedCountToday >= 2) continue;
-    if (slot.careType === 'walk' && walkedToday) continue;
 
-    const nextDate = getNextReminderDate(slot.hour, slot.minute);
+    if (
+      slot.careType === 'feed' &&
+      feedCountToday >= 2
+    ) {
+      continue;
+    }
+
+    if (
+      slot.careType === 'walk' &&
+      walkedToday
+    ) {
+      continue;
+    }
+
+    const nextDate =
+      getNextReminderDate(
+        slot.hour,
+        slot.minute
+      );
 
     toSchedule.push({
-      id: notificationIdFor(dogId, slot.id),
+      id: notificationIdFor(
+        dogId,
+        slot.id
+      ),
+
       title: slot.title,
-      body: slot.body(dog.name),
-      schedule: { at: nextDate, repeats: true, every: 'day', allowWhileIdle: true },
-      actionTypeId: 'CARE_CONFIRM',
-      extra: { careType: slot.careType, dogId }
+
+      body: slot.body(
+        dog.name
+      ),
+
+      schedule: {
+        at: nextDate,
+        repeats: true,
+        every: 'day',
+        allowWhileIdle: true
+      },
+
+      actionTypeId:
+        'CARE_CONFIRM',
+
+      extra: {
+        careType: slot.careType,
+        dogId
+      }
     });
   }
 
   if (toSchedule.length > 0) {
-    await LocalNotifications.schedule({ notifications: toSchedule });
+    await LocalNotifications.schedule({
+      notifications: toSchedule
+    });
   }
 
-  await scheduleCustomRemindersForDog(dogId);
+  await scheduleCustomRemindersForDog(
+    householdId,
+    dogId
+  );
 }
 
-export async function scheduleRemindersForAllDogs() {
-  const dogs = await getAllDogs();
-  for (const dog of dogs) {
-    await scheduleSmartReminders(dog.id);
+export async function scheduleRemindersForAllDogs(
+  householdId,
+  dogs
+) {
+  const allDogs =
+    dogs ||
+    await getAllDogs(
+      householdId
+    );
+
+  for (const dog of allDogs) {
+    await scheduleSmartReminders(
+      householdId,
+      dog.id
+    );
   }
 }
+
+export async function cancelOrphanedReminders(
+  householdId
+) {
+  const dogs =
+    await getAllDogs(
+      householdId
+    );
+
+  const validDogIds =
+    new Set(
+      dogs.map(
+        (dog) => dog.id
+      )
+    );
+
+  const pending =
+    await LocalNotifications.getPending();
+
+  const orphaned =
+    pending.notifications.filter(
+      (notification) => {
+        const dogId =
+          notification.extra?.dogId;
+
+        return (
+          dogId &&
+          !validDogIds.has(dogId)
+        );
+      }
+    );
+
+  if (orphaned.length > 0) {
+    await LocalNotifications.cancel({
+      notifications:
+        orphaned.map(
+          (notification) => ({
+            id: notification.id
+          })
+        )
+    });
+  }
+}
+
