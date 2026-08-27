@@ -7,22 +7,24 @@ import { formatEventTime } from '../utils/format.js';
 import LogControls from '../components/LogControls.jsx';
 import { scheduleSmartReminders } from '../utils/notifications.js';
 import './Home.css';
+import { useAuth } from '../contexts/AuthContext.jsx';
 
 function Activity() {
   const { dog, loading } = useDog();
+  const { household } = useAuth();
   const [events, setEvents] = useState([]);
 
   useEffect(() => {
-    if (dog) loadEvents();
-  }, [dog]);
+    if (dog && household?.id) loadEvents();
+  }, [dog, household?.id]);
 
   async function loadEvents() {
-    const all = await getEventsForDog(dog.id);
+    const all = await getEventsForDog(household.id, dog.id);
     setEvents(all.filter((e) => e.type === 'walk' || e.type === 'play'));
   }
 
   async function handleLog(type, minutes) {
-    await logCareEvent(dog.id, type, minutes);
+    await logCareEvent(household.id, dog.id, type, minutes);
     await loadEvents();
     await scheduleSmartReminders(dog.id);
   }

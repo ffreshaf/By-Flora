@@ -12,18 +12,21 @@ import { calculateExerciseMinutes } from '../utils/exercise.js';
 
 import './Home.css';
 
+import { useAuth } from '../contexts/AuthContext.jsx';
+
 function Home() {
   const { dog, allDogs, loading, switchDog } = useDog();
+  const { household } = useAuth();
   const [events, setEvents] = useState([]);
 
   useEffect(() => {
-    if (dog) {
+    if (dog && household?.id) {
       loadEvents();
     }
-  }, [dog]);
+  }, [dog, household?.id]);
 
   async function loadEvents() {
-    const data = await getEventsForDog(dog.id);
+    const data = await getEventsForDog(household.id, dog.id);
     setEvents(data);
   }
 

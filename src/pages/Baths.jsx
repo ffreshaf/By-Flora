@@ -4,22 +4,24 @@ import { logCareEvent, getEventsForDog } from '../db/careEvents.js';
 import { getBathStatus } from '../utils/reminders.js';
 import { formatEventTime } from '../utils/format.js';
 import './Home.css';
+import { useAuth } from '../contexts/AuthContext.jsx';
 
 function Baths() {
   const { dog, loading } = useDog();
+  const { household } = useAuth();
   const [events, setEvents] = useState([]);
 
   useEffect(() => {
-    if (dog) loadEvents();
-  }, [dog]);
+    if (dog && household?.id) loadEvents();
+  }, [dog, household?.id]);
 
   async function loadEvents() {
-    const all = await getEventsForDog(dog.id);
+    const all = await getEventsForDog(household.id, dog.id);
     setEvents(all.filter((e) => e.type === 'bath'));
   }
 
   async function handleLog() {
-    await logCareEvent(dog.id, 'bath');
+    await logCareEvent(household.id, dog.id, 'bath');
     await loadEvents();
   }
 

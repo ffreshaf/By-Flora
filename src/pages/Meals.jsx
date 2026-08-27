@@ -6,22 +6,24 @@ import { startOfToday } from '../utils/reminders.js';
 import { formatEventTime } from '../utils/format.js';
 import { scheduleSmartReminders } from '../utils/notifications.js';
 import './Home.css';
+import { useAuth } from '../contexts/AuthContext.jsx';
 
 function Meals() {
   const { dog, loading } = useDog();
+  const { household } = useAuth();
   const [events, setEvents] = useState([]);
 
   useEffect(() => {
-    if (dog) loadEvents();
-  }, [dog]);
+    if (dog && household?.id) loadEvents();
+  }, [dog, household?.id]);
 
   async function loadEvents() {
-    const all = await getEventsForDog(dog.id);
+    const all = await getEventsForDog(household.id, dog.id);
     setEvents(all.filter((e) => e.type === 'feed'));
   }
 
   async function handleLog() {
-    await logCareEvent(dog.id, 'feed');
+    await logCareEvent(household.id, dog.id, 'feed');
     await loadEvents();
     await scheduleSmartReminders(dog.id);
   }

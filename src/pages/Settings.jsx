@@ -201,9 +201,9 @@ function Settings() {
   async function handleSave(dogData) {
     let id;
     if (dog && !addingNew) {
-      id = await updateDog(dog.id, dogData);
+      id = await updateDog(household.id, dog.id, dogData);
     } else {
-      id = await addDog(dogData);
+      id = await addDog(household.id, dogData);
     }
     await switchDog(id);
     setAddingNew(false);
@@ -223,7 +223,7 @@ function Settings() {
     if (!confirm(`Remove ${dog.name}'s profile? This can't be undone.`)) return;
 
     await cancelRemindersForDog(dog.id); // cancel BEFORE deleting, while we still know dog.id
-    await deleteDog(dog.id);
+    await deleteDog(household.id, dog.id);
     await reload();
   }
 

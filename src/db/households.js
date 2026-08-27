@@ -20,8 +20,7 @@ export async function createHousehold(uid, name) {
   await setDoc(householdRef, {
     name,
     inviteCode,
-    memberUids: [uid],
-    dogId: null
+    memberUids: [uid]
   });
 
   await setDoc(
