@@ -5,6 +5,9 @@ import {
   useLocation,
   useNavigate,
 } from 'react-router-dom';
+import { testFirebase } from './firebaseTest.js';
+
+import { useAuth } from './contexts/AuthContext.jsx';
 
 import { App as CapacitorApp } from '@capacitor/app';
 import { useEffect, useRef, useState } from 'react';
@@ -30,6 +33,8 @@ import Meals from './pages/Meals.jsx';
 import Activity from './pages/Activity.jsx';
 import Baths from './pages/Baths.jsx';
 import About from './pages/About.jsx';
+import Login from './pages/Login.jsx';
+import HouseholdSetup from './pages/HouseholdSetup.jsx';
 
 const NAV_ITEMS = [
   { to: '/', end: true, icon: '🏠', label: 'Home' },
@@ -46,6 +51,10 @@ function App() {
   const location = useLocation();
   const navigate = useNavigate();
   const touchStart = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    testFirebase();
+  }, []);
 
   useEffect(() => {
     let notificationListener;
@@ -158,6 +167,12 @@ function App() {
   }
 
   const isSwipePage = SWIPE_ROUTES.includes(location.pathname);
+
+  const { user, household, loading: authLoading } = useAuth();
+
+  if (authLoading) return <p>Loading...</p>;
+  if (!user) return <Login />;
+  if (!household) return <HouseholdSetup />;
 
   return (
     <div className="app-shell">

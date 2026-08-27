@@ -30,6 +30,10 @@ import {
 
 import ReminderForm from '../components/ReminderForm.jsx';
 
+import { useAuth } from '../contexts/AuthContext.jsx';
+import { getHouseholdMembers } from '../db/households.js';
+import { logOut } from '../auth/authService.js';
+
 function toTimeInputValue(hour, minute) {
   return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
 }
@@ -51,6 +55,30 @@ function Settings() {
   const [customReminders, setCustomReminders] = useState([]);
   const [addingReminder, setAddingReminder] = useState(false);
   const [editingReminder, setEditingReminder] = useState(null); 
+
+  const { user, household } = useAuth();
+  const [members, setMembers] = useState([]);
+  const [codeCopied, setCodeCopied] = useState(false);
+
+  useEffect(() => {
+    if (household) loadMembers();
+  }, [household?.id]);
+
+  async function loadMembers() {
+    const list = await getHouseholdMembers(household.id);
+    setMembers(list);
+  }
+
+  function handleCopyCode() {
+    navigator.clipboard.writeText(household.inviteCode);
+    setCodeCopied(true);
+    setTimeout(() => setCodeCopied(false), 2000);
+  }
+
+  async function handleSignOut() {
+    if (!confirm('Sign out?')) return;
+    await logOut();
+  }
 
   useEffect(() => {
     if (dog) {
@@ -204,6 +232,39 @@ function Settings() {
   return (
     <div className="care-card">
       <h2>Settings</h2>
+
+      {household && (
+        <>
+          <p className="settings-section-label" style={{ marginTop: 0 }}>
+            Family
+          </p>
+
+          <div className="custom-reminder-card" style={{ marginBottom: 10 }}>
+            <div>
+              <strong>{household.name}</strong>
+              <small>Invite code: {household.inviteCode}</small>
+            </div>
+            <button className="btn btn-secondary btn-small" onClick={handleCopyCode}>
+              {codeCopied ? 'Copied!' : 'Copy code'}
+            </button>
+          </div>
+
+          <div className="custom-reminder-list">
+            {members.map((m) => (
+              <div className="custom-reminder-card" key={m.uid}>
+                <div>
+                  <strong>{m.name}{m.uid === user.uid ? ' (you)' : ''}</strong>
+                  <small>{m.email}</small>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <button className="btn btn-secondary" onClick={handleSignOut} style={{ marginTop: 4, marginBottom: 16 }}>
+            Sign out
+          </button>
+        </>
+      )}
 
       <p className="settings-section-label">Dogs</p>
       {allDogs.length > 0 && (
