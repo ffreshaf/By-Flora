@@ -5,12 +5,13 @@ import { calculateDailyFood } from '../utils/food.js';
 import { startOfToday } from '../utils/reminders.js';
 import { formatEventTime } from '../utils/format.js';
 import { scheduleSmartReminders } from '../utils/notifications.js';
+import { notifyOtherMembers } from '../utils/pushNotify.js';
 import './Home.css';
 import { useAuth } from '../contexts/AuthContext.jsx';
 
 function Meals() {
   const { dog, loading } = useDog();
-  const { household } = useAuth();
+  const { household, user } = useAuth();
   const [events, setEvents] = useState([]);
 
   useEffect(() => {
@@ -23,9 +24,23 @@ function Meals() {
   }
 
   async function handleLog() {
-    await logCareEvent(household.id, dog.id, 'feed');
+    await logCareEvent(
+      household.id,
+      dog.id,
+      'feed',
+      null,
+      user.uid,
+      user.displayName || user.email
+    );
     await loadEvents();
-    await scheduleSmartReminders(dog.id);
+    await scheduleSmartReminders(household.id, dog.id);
+    await notifyOtherMembers({
+      household,
+      loggerUid: user.uid,
+      loggerName: user.displayName || user.email,
+      dogName: dog.name,
+      careType: 'feed',
+    });
   }
 
   if (loading) return <p>Loading...</p>;

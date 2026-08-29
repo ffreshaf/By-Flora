@@ -26,7 +26,9 @@ export async function logCareEvent(
   householdId,
   dogId,
   type,
-  durationMinutes = null
+  durationMinutes = null,
+  loggedBy = null,
+  loggedByName = null
 ) {
   const ref = await addDoc(
     careEventsRef(householdId, dogId),
@@ -34,7 +36,9 @@ export async function logCareEvent(
       dogId,
       type,
       durationMinutes,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      loggedBy,
+      loggedByName
     }
   );
 

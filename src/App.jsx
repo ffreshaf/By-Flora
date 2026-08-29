@@ -24,6 +24,9 @@ import {
   cancelOrphanedReminders
 } from './utils/notifications.js';
 
+import { initPush } from './utils/push.js';
+import { notifyOtherMembers } from './utils/pushNotify.js';
+
 import './App.css';
 
 import Home from './pages/Home.jsx';
@@ -55,148 +58,113 @@ function App() {
   const { user, household, loading: authLoading } = useAuth();
 
   useEffect(() => {
-  let notificationListener;
+    let notificationListener;
 
-  async function initNotifications() {
-    try {
-      // 1. Register the action type
-      await setupActionTypes();
+    async function initNotifications() {
+      try {
+        await setupActionTypes();
 
-      // 2. REGISTER THE LISTENER FIRST
-      notificationListener = await LocalNotifications.addListener(
-        'localNotificationActionPerformed',
-        async (action) => {
-          console.log(
-            'Notification action received:',
-            JSON.stringify(action)
-          );
+        notificationListener = await LocalNotifications.addListener(
+          'localNotificationActionPerformed',
+          async (action) => {
+            console.log('Notification action received:', JSON.stringify(action));
 
-          try {
-            if (action.actionId === 'yes') {
-              const { careType, dogId } =
-                action.notification.extra || {};
+            try {
+              if (action.actionId === 'yes') {
+                const { careType, dogId } = action.notification.extra || {};
 
-              console.log('careType:', careType);
-              console.log('dogId:', dogId);
+                console.log('careType:', careType);
+                console.log('dogId:', dogId);
 
-              if (!dogId || !careType || !household?.id) {
-                console.log(
-                  'Missing dogId, careType, or household ID'
+                if (!dogId || !careType || !household?.id) {
+                  console.log('Missing dogId, careType, or household ID');
+                  return;
+                }
+
+                const dog = await getDog(household.id, dogId);
+
+                console.log('Looked up dog:', dog);
+
+                if (!dog) {
+                  console.log('Dog not found:', dogId);
+                  return;
+                }
+
+                const eventId = await logCareEvent(
+                  household.id,
+                  dog.id,
+                  careType,
+                  careType === 'feed' ? null : 20,
+                  user.uid,
+                  user.displayName || user.email
                 );
-                return;
+
+                console.log('Care event logged successfully:', eventId);
+
+                await notifyOtherMembers({
+                  household,
+                  loggerUid: user.uid,
+                  loggerName: user.displayName || user.email,
+                  dogName: dog.name,
+                  careType,
+                });
+
+                await scheduleSmartReminders(household.id, dog.id);
+
+                console.log('Reminder schedule updated for:', dog.name);
               }
-
-              const dog = await getDog(
-                household.id,
-                dogId
-              );
-
-              console.log('Looked up dog:', dog);
-
-              if (!dog) {
-                console.log('Dog not found:', dogId);
-                return;
-              }
-
-              // THIS is what actually logs the meal/care event
-              const eventId = await logCareEvent(
-                household.id,
-                dog.id,
-                careType,
-                careType === 'feed' ? null : 20
-              );
-
-              console.log(
-                'Care event logged successfully:',
-                eventId
-              );
-
-              // Recalculate/schedule reminders
-              await scheduleSmartReminders(
-                household.id,
-                dog.id
-              );
-
-              console.log(
-                'Reminder schedule updated for:',
-                dog.name
-              );
+            } catch (err) {
+              console.error('Error handling notification action:', err);
             }
-          } catch (err) {
-            console.error(
-              'Error handling notification action:',
-              err
-            );
+
+            await CapacitorApp.minimizeApp();
           }
+        );
 
-          await CapacitorApp.minimizeApp();
+        console.log('Notification listener registered successfully');
+
+        const granted = await requestNotificationPermission();
+
+        await initPush(user?.uid);
+
+        if (!granted) {
+          console.log('Notifications are not permitted');
+          return;
         }
-      );
 
-      console.log(
-        'Notification listener registered successfully'
-      );
+        if (!household?.id) {
+          console.log('No household yet, skipping reminder scheduling');
+          return;
+        }
 
-      // 3. NOW request permission
-      const granted = await requestNotificationPermission();
+        try {
+          await cancelOrphanedReminders(household.id);
+        } catch (err) {
+          console.log('cancelOrphanedReminders failed:', err);
+        }
 
-      if (!granted) {
-        console.log(
-          'Notifications are not permitted'
-        );
-        return;
-      }
+        try {
+          await scheduleRemindersForAllDogs(household.id);
+        } catch (err) {
+          console.log('scheduleRemindersForAllDogs failed:', err);
+        }
 
-      // 4. NOW do the scheduling
-      if (!household?.id) {
-        console.log(
-          'No household yet, skipping reminder scheduling'
-        );
-        return;
-      }
-
-      try {
-        await cancelOrphanedReminders(
-          household.id
-        );
       } catch (err) {
-        console.log(
-          'cancelOrphanedReminders failed:',
-          err
-        );
+        console.error('initNotifications failed:', err);
       }
+    }
 
-      try {
-        await scheduleRemindersForAllDogs(
-          household.id
-        );
-      } catch (err) {
-        console.log(
-          'scheduleRemindersForAllDogs failed:',
-          err
-        );
+    if (user && household?.id) {
+      initNotifications();
+    }
+
+    return () => {
+      if (notificationListener) {
+        notificationListener.remove();
+        notificationListener = null;
       }
-
-    } catch (err) {
-      console.error(
-        'initNotifications failed:',
-        err
-      );
-    }
-  }
-
-  // Only initialize when logged in and household exists
-  if (user && household?.id) {
-    initNotifications();
-  }
-
-  return () => {
-    if (notificationListener) {
-      notificationListener.remove();
-      notificationListener = null;
-    }
-  };
-}, [user, household?.id]);
+    };
+  }, [user, household?.id]);
 
   const handleLogoClick = () => {
     setSpinning(true);

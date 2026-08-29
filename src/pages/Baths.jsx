@@ -3,12 +3,13 @@ import { useDog } from '../hooks/useDog.js';
 import { logCareEvent, getEventsForDog } from '../db/careEvents.js';
 import { getBathStatus } from '../utils/reminders.js';
 import { formatEventTime } from '../utils/format.js';
+import { notifyOtherMembers } from '../utils/pushNotify.js';
 import './Home.css';
 import { useAuth } from '../contexts/AuthContext.jsx';
 
 function Baths() {
   const { dog, loading } = useDog();
-  const { household } = useAuth();
+  const { household, user } = useAuth();
   const [events, setEvents] = useState([]);
 
   useEffect(() => {
@@ -21,8 +22,22 @@ function Baths() {
   }
 
   async function handleLog() {
-    await logCareEvent(household.id, dog.id, 'bath');
+    await logCareEvent(
+      household.id,
+      dog.id,
+      'bath',
+      null,
+      user.uid,
+      user.displayName || user.email
+    );
     await loadEvents();
+    await notifyOtherMembers({
+      household,
+      loggerUid: user.uid,
+      loggerName: user.displayName || user.email,
+      dogName: dog.name,
+      careType: 'bath',
+    });
   }
 
   if (loading) return <p>Loading...</p>;

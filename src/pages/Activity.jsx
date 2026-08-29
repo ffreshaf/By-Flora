@@ -6,12 +6,13 @@ import { startOfToday, PLAY_TARGET } from '../utils/reminders.js';
 import { formatEventTime } from '../utils/format.js';
 import LogControls from '../components/LogControls.jsx';
 import { scheduleSmartReminders } from '../utils/notifications.js';
+import { notifyOtherMembers } from '../utils/pushNotify.js';
 import './Home.css';
 import { useAuth } from '../contexts/AuthContext.jsx';
 
 function Activity() {
   const { dog, loading } = useDog();
-  const { household } = useAuth();
+  const { household, user } = useAuth();
   const [events, setEvents] = useState([]);
 
   useEffect(() => {
@@ -24,9 +25,23 @@ function Activity() {
   }
 
   async function handleLog(type, minutes) {
-    await logCareEvent(household.id, dog.id, type, minutes);
+    await logCareEvent(
+      household.id,
+      dog.id,
+      type,
+      minutes,
+      user.uid,
+      user.displayName || user.email
+    );
     await loadEvents();
-    await scheduleSmartReminders(dog.id);
+    await scheduleSmartReminders(household.id, dog.id);
+    await notifyOtherMembers({
+      household,
+      loggerUid: user.uid,
+      loggerName: user.displayName || user.email,
+      dogName: dog.name,
+      careType: type,
+    });
   }
 
   if (loading) return <p>Loading...</p>;

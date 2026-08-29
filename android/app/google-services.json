@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "185062875197",
+    "project_id": "by-flora",
+    "storage_bucket": "by-flora.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:185062875197:android:89a664ee77cf4ce63a4a54",
+        "android_client_info": {
+          "package_name": "com.flora.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "185062875197-1alr9ttl986n1ubjveiarmf7k4q11rfu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC9-XKIGkVfPdOUHiLLo9B-fE7WY-GO-VE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "185062875197-1alr9ttl986n1ubjveiarmf7k4q11rfu.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
