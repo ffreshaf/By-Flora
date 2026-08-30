@@ -192,6 +192,7 @@ function Home() {
 
         <div className="home-section-heading">
           <h2>Today</h2>
+          <Link to="/history">History</Link>
         </div>
 
         <div className="today-list">

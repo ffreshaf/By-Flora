@@ -1,11 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useDog } from '../hooks/useDog.js';
+import { useAuth } from '../contexts/AuthContext.jsx';
 import { getEventsForDog } from '../db/careEvents.js';
-import { startOfToday } from '../utils/reminders.js';
+import { HYGIENE_TYPES } from '../utils/hygiene.js';
 import { Link } from 'react-router-dom';
 import './Home.css';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+
+const CARE_META = {
+  feed: { icon: '🍖', label: 'Feed' },
+  walk: { icon: '🐾', label: 'Walk' },
+  play: { icon: '🎾', label: 'Play' },
+  ...Object.fromEntries(HYGIENE_TYPES.map((h) => [h.id, { icon: h.icon, label: h.label }])),
+};
 
 function getDayStart(date) {
   const result = new Date(date);
@@ -27,50 +35,29 @@ function formatDate(timestamp) {
 }
 
 function getEventIcon(type) {
-  switch (type) {
-    case 'feed':
-      return '🍖';
-    case 'walk':
-      return '🐾';
-    case 'play':
-      return '🎾';
-    case 'bath':
-      return '🛁';
-    default:
-      return '✨';
-  }
+  return CARE_META[type]?.icon || '✨';
 }
 
 function getEventName(type) {
-  switch (type) {
-    case 'feed':
-      return 'Feed';
-    case 'walk':
-      return 'Walk';
-    case 'play':
-      return 'Play';
-    case 'bath':
-      return 'Bath';
-    default:
-      return type;
-  }
+  return CARE_META[type]?.label || type;
 }
 
 function History() {
   const { dog, loading } = useDog();
+  const { household } = useAuth();
   const [events, setEvents] = useState([]);
   const [period, setPeriod] = useState('week');
 
   useEffect(() => {
-    if (dog) {
+    if (dog && household?.id) {
       loadEvents();
     } else {
       setEvents([]);
     }
-  }, [dog?.id]);
+  }, [dog?.id, household?.id]);
 
   async function loadEvents() {
-    const result = await getEventsForDog(dog.id);
+    const result = await getEventsForDog(household.id, dog.id);
     setEvents(result);
   }
 
@@ -100,7 +87,6 @@ function History() {
     const feeds = periodEvents.filter((e) => e.type === 'feed');
     const walks = periodEvents.filter((e) => e.type === 'walk');
     const plays = periodEvents.filter((e) => e.type === 'play');
-    const baths = periodEvents.filter((e) => e.type === 'bath');
 
     const walkMinutes = walks.reduce(
       (total, event) => total + (event.durationMinutes || 0),
@@ -112,13 +98,16 @@ function History() {
       0
     );
 
+    const hygieneCounts = HYGIENE_TYPES.map((h) => ({
+      ...h,
+      count: periodEvents.filter((e) => e.type === h.id).length
+    }));
+
     return {
       feeds: feeds.length,
-      walks: walks.length,
-      plays: plays.length,
-      baths: baths.length,
       walkMinutes,
-      playMinutes
+      playMinutes,
+      hygieneCounts
     };
   }, [periodEvents]);
 
@@ -260,11 +249,13 @@ function History() {
           <span>Play time</span>
         </div>
 
-        <div className="history-stat-card">
-          <span className="history-stat-icon">🛁</span>
-          <strong>{stats.baths}</strong>
-          <span>Baths</span>
-        </div>
+        {stats.hygieneCounts.map((h) => (
+          <div className="history-stat-card" key={h.id}>
+            <span className="history-stat-icon">{h.icon}</span>
+            <strong>{h.count}</strong>
+            <span>{h.label}</span>
+          </div>
+        ))}
 
       </div>
 
