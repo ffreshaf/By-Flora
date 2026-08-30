@@ -92,6 +92,7 @@ main > .care-card:first-child {
   font-size: 0.85rem;
   cursor: pointer;
   transition: transform 0.15s ease, opacity 0.15s ease;
+  text-decoration: none;
 }
 
 .btn:hover {
@@ -973,4 +974,67 @@ main > .care-card:first-child {
 .custom-reminder-add-btn {
   display: block;
   margin: 12px auto;
+}
+
+.settings-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: white;
+  border-radius: 10px;
+  padding: 12px 14px;
+  text-decoration: none;
+  border: none;
+  width: 100%;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+}
+
+.settings-nav-icon {
+  font-size: 1.15rem;
+  flex: 0 0 auto;
+}
+
+.settings-nav-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+.settings-nav-text strong {
+  font-size: 0.85rem;
+  color: var(--pine);
+}
+
+.settings-nav-text span {
+  font-size: 0.7rem;
+  color: var(--sage);
+}
+
+.settings-nav-chevron {
+  font-size: 1.1rem;
+  color: var(--sage);
+  opacity: 0.6;
+}
+
+.settings-nav-danger strong {
+  color: var(--brick);
+}
+
+.settings-back-link {
+  display: inline-block;
+  font-size: 0.78rem;
+  color: var(--sage);
+  text-decoration: none;
+  font-weight: 600;
+  margin-bottom: 10px;
 }

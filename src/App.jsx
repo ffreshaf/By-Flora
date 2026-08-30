@@ -38,6 +38,10 @@ import Baths from './pages/Baths.jsx';
 import About from './pages/About.jsx';
 import Login from './pages/Login.jsx';
 import HouseholdSetup from './pages/HouseholdSetup.jsx';
+import SettingsFamily from './pages/SettingsFamily.jsx';
+import SettingsDogs from './pages/SettingsDogs.jsx';
+import SettingsCustomReminders from './pages/SettingsCustomReminders.jsx';
+import SettingsReminderTimes from './pages/SettingsReminderTimes.jsx';
 
 const NAV_ITEMS = [
   { to: '/', end: true, icon: '🏠', label: 'Home' },
@@ -239,6 +243,10 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/about" element={<About />} />
+            <Route path="/settings/family" element={<SettingsFamily />} />
+            <Route path="/settings/dogs" element={<SettingsDogs />} />
+            <Route path="/settings/reminders" element={<SettingsCustomReminders />} />
+            <Route path="/settings/reminder-times" element={<SettingsReminderTimes />} />
           </Routes>
         </div>
       </main>
