@@ -4,6 +4,7 @@ import { useDog } from '../hooks/useDog.js';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { updateDog } from '../db/dogs.js';
 import { PLAY_TARGET } from '../utils/reminders.js';
+import { scheduleHygieneReminders } from '../utils/notifications.js';
 import './Home.css';
 
 function SettingsCareTargets() {
@@ -42,6 +43,9 @@ function SettingsCareTargets() {
     });
 
     await reload();
+
+    await scheduleHygieneReminders(household.id, dog.id);
+
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }

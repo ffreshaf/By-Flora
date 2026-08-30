@@ -8,6 +8,7 @@ import {
 } from '../db/settings.js';
 import { getAllDogs, getDog, updateDog } from '../db/dogs.js';
 import { getRemindersForDog } from '../db/reminders.js';
+import { HYGIENE_TYPES } from './hygiene.js';
 
 export async function requestNotificationPermission() {
   const result = await LocalNotifications.requestPermissions();
@@ -26,6 +27,19 @@ export async function setupActionTypes() {
       }
     ]
   });
+}
+
+export function hygieneNotificationId(dogId, hygieneTypeId) {
+  const text = `hygiene:${dogId}:${hygieneTypeId}`;
+
+  let hash = 0;
+
+  for (let i = 0; i < text.length; i++) {
+    hash = ((hash << 5) - hash) + text.charCodeAt(i);
+    hash |= 0;
+  }
+
+  return 2000000 + Math.abs(hash % 900000);
 }
 
 /*
@@ -297,7 +311,8 @@ export async function cancelRemindersForDog(
       id: customReminderNotificationId(
         reminder.id
       )
-    }))
+    })),
+    ...HYGIENE_TYPES.map((h) => ({ id: hygieneNotificationId(dogId, h.id) }))
   ];
 
   if (ids.length > 0) {
@@ -420,6 +435,58 @@ export async function scheduleCustomRemindersForDog(
 // =========================
 // SMART REMINDERS
 // =========================
+
+export async function scheduleHygieneReminders(householdId, dogId) {
+  const dog = await getDog(householdId, dogId);
+  if (!dog) return;
+
+  const events = await getEventsForDog(householdId, dogId);
+
+  const ids = HYGIENE_TYPES.map((h) => ({ id: hygieneNotificationId(dogId, h.id) }));
+  await LocalNotifications.cancel({ notifications: ids });
+
+  const toSchedule = [];
+
+  for (const hygieneType of HYGIENE_TYPES) {
+    const intervalDays = dog[hygieneType.intervalField] || hygieneType.defaultInterval;
+
+    const lastEvent = events
+      .filter((e) => e.type === hygieneType.id)
+      .sort((a, b) => b.timestamp - a.timestamp)[0];
+
+    // If never logged, give it the benefit of the doubt and count
+    // from today rather than assuming it's overdue immediately.
+    const baseTimestamp = lastEvent ? lastEvent.timestamp : Date.now();
+    const dueDate = new Date(baseTimestamp + intervalDays * 24 * 60 * 60 * 1000);
+
+    // Fire at a sensible time of day rather than the exact due moment.
+    dueDate.setHours(9, 0, 0, 0);
+
+    // If that lands in the past (e.g. already overdue), push to tomorrow 9am
+    // instead of scheduling something in the past, which some platforms drop.
+    if (dueDate <= new Date()) {
+      dueDate.setDate(dueDate.getDate() + 1);
+    }
+
+    toSchedule.push({
+      id: hygieneNotificationId(dogId, hygieneType.id),
+      title: hygieneType.notifTitle,
+      body: hygieneType.notifBody(dog.name),
+      schedule: {
+        at: dueDate,
+        allowWhileIdle: true
+      },
+      extra: {
+        careType: hygieneType.id,
+        dogId
+      }
+    });
+  }
+
+  if (toSchedule.length > 0) {
+    await LocalNotifications.schedule({ notifications: toSchedule });
+  }
+}
 
 function getNextReminderDate(
   hour,
@@ -570,6 +637,10 @@ export async function scheduleRemindersForAllDogs(
 
   for (const dog of allDogs) {
     await scheduleSmartReminders(
+      householdId,
+      dog.id
+    );
+    await scheduleHygieneReminders(
       householdId,
       dog.id
     );

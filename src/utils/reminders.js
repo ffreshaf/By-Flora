@@ -12,24 +12,24 @@ export function daysSince(timestamp) {
   return Math.floor((Date.now() - timestamp) / (1000 * 60 * 60 * 24));
 }
 
-export function getBathStatus(lastBathTimestamp, intervalDays = 28) {
-  if (!lastBathTimestamp) {
+export function getHygieneStatus(lastTimestamp, intervalDays = 28, label = 'Bath') {
+  if (!lastTimestamp) {
     return {
       isDue: true,
-      message: 'No bath logged yet'
+      message: `No ${label.toLowerCase()} logged yet`
     };
   }
 
-  const lastBath = new Date(lastBathTimestamp);
-  const nextBath = new Date(lastBath);
+  const last = new Date(lastTimestamp);
+  const next = new Date(last);
 
-  nextBath.setDate(
-    nextBath.getDate() + Number(intervalDays)
+  next.setDate(
+    next.getDate() + Number(intervalDays)
   );
 
   const now = new Date();
 
-  const diffMs = nextBath - now;
+  const diffMs = next - now;
   const diffDays = Math.ceil(
     diffMs / (1000 * 60 * 60 * 24)
   );
@@ -37,21 +37,26 @@ export function getBathStatus(lastBathTimestamp, intervalDays = 28) {
   if (diffDays <= 0) {
     return {
       isDue: true,
-      message: 'Bath is due'
+      message: `${label} is due`
     };
   }
 
   if (diffDays === 1) {
     return {
       isDue: false,
-      message: 'Bath due tomorrow'
+      message: `${label} due tomorrow`
     };
   }
 
   return {
     isDue: false,
-    message: `Bath due in ${diffDays} days`
+    message: `${label} due in ${diffDays} days`
   };
+}
+
+// Kept for backward compatibility with any existing callers.
+export function getBathStatus(lastBathTimestamp, intervalDays = 28) {
+  return getHygieneStatus(lastBathTimestamp, intervalDays, 'Bath');
 }
 
 export const PLAY_TARGET = PLAY_TARGET_MINUTES;

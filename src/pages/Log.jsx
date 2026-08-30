@@ -4,10 +4,11 @@ import { useAuth } from '../contexts/AuthContext.jsx';
 import { logCareEvent, getEventsForDog } from '../db/careEvents.js';
 import { calculateDailyFood } from '../utils/food.js';
 import { calculateExerciseMinutes } from '../utils/exercise.js';
-import { getBathStatus, startOfToday, PLAY_TARGET } from '../utils/reminders.js';
+import { getHygieneStatus, startOfToday, PLAY_TARGET } from '../utils/reminders.js';
 import { formatEventTime } from '../utils/format.js';
-import { scheduleSmartReminders } from '../utils/notifications.js';
+import { scheduleSmartReminders, scheduleHygieneReminders } from '../utils/notifications.js';
 import { notifyOtherMembers } from '../utils/pushNotify.js';
+import { HYGIENE_TYPES } from '../utils/hygiene.js';
 import LogControls from '../components/LogControls.jsx';
 import './Home.css';
 
@@ -17,16 +18,16 @@ const TABS = [
   { id: 'hygiene', label: 'Hygiene', icon: '🧴' },
 ];
 
-const HYGIENE_TYPES = [
-  { id: 'bath', label: 'Bath', icon: '🛁', intervalField: 'bathIntervalDays', defaultInterval: 28 },
-  { id: 'groom', label: 'Groom', icon: '✂️', intervalField: 'groomIntervalDays', defaultInterval: 42 },
-  { id: 'nails', label: 'Nails', icon: '💅', intervalField: 'nailIntervalDays', defaultInterval: 21 },
+const ACTIVITY_TYPES = [
+  { id: 'walk', label: 'Walk', icon: '🐾' },
+  { id: 'play', label: 'Play', icon: '🎾' },
 ];
 
 function Log() {
   const { dog, loading } = useDog();
   const { household, user } = useAuth();
   const [activeTab, setActiveTab] = useState('meals');
+  const [activeActivity, setActiveActivity] = useState('walk');
   const [activeHygiene, setActiveHygiene] = useState('bath');
   const [events, setEvents] = useState([]);
 
@@ -68,37 +69,37 @@ function Log() {
     await logAndNotify('feed', null, { reschedule: true });
   }
 
-  async function handleLogActivity(type, minutes) {
-    await logAndNotify(type, minutes, { reschedule: true });
+  async function handleLogActivity(minutes) {
+    await logAndNotify(activeActivity, minutes, { reschedule: true });
   }
 
   async function handleLogHygiene(type) {
     await logAndNotify(type);
+    await scheduleHygieneReminders(household.id, dog.id);
   }
 
   if (loading) return <p>Loading...</p>;
   if (!dog) return <p className="care-note">Set up her profile in Settings first.</p>;
 
   const mealEvents = events.filter((e) => e.type === 'feed');
-  const activityEvents = events.filter((e) => e.type === 'walk' || e.type === 'play');
 
   const { mealsPerDay, gramsPerMeal } = calculateDailyFood(dog);
   const mealsToday = mealEvents.filter((e) => e.timestamp >= startOfToday()).length;
 
   const { minutesPerDay: exerciseTarget } = calculateExerciseMinutes(dog);
-  const todayActivity = activityEvents.filter((e) => e.timestamp >= startOfToday());
-  const walkMinutesToday = todayActivity
-    .filter((e) => e.type === 'walk')
-    .reduce((s, e) => s + (e.durationMinutes || 0), 0);
-  const playMinutesToday = todayActivity
-    .filter((e) => e.type === 'play')
+  const playTarget = dog.playTargetMinutes ?? PLAY_TARGET;
+
+  const activeActivityConfig = ACTIVITY_TYPES.find((a) => a.id === activeActivity);
+  const activityEvents = events.filter((e) => e.type === activeActivity);
+  const activityTarget = activeActivity === 'walk' ? exerciseTarget : playTarget;
+  const activityMinutesToday = activityEvents
+    .filter((e) => e.timestamp >= startOfToday())
     .reduce((s, e) => s + (e.durationMinutes || 0), 0);
 
   const activeHygieneConfig = HYGIENE_TYPES.find((h) => h.id === activeHygiene);
   const hygieneEvents = events.filter((e) => e.type === activeHygiene);
   const hygieneIntervalDays = dog[activeHygieneConfig.intervalField] || activeHygieneConfig.defaultInterval;
-  const hygieneStatus = getBathStatus(hygieneEvents[0]?.timestamp, hygieneIntervalDays);
-  const playTarget = dog.playTargetMinutes ?? PLAY_TARGET;
+  const hygieneStatus = getHygieneStatus(hygieneEvents[0]?.timestamp, hygieneIntervalDays, activeHygieneConfig.label);
 
   return (
     <div className="care-card">
@@ -138,29 +139,32 @@ function Log() {
 
       {activeTab === 'activity' && (
         <div className="log-panel">
-          <div className="highlight-grid highlight-grid-2">
-            <div className="highlight-card">
-              <span className="highlight-label">Walk</span>
-              <span className="highlight-value">{walkMinutesToday}/{exerciseTarget}m</span>
-            </div>
-            <div className="highlight-card">
-              <span className="highlight-label">Play</span>
-              <span className="highlight-value">{playMinutesToday}/{PLAY_TARGET}m</span>
-            </div>
+          <div className="hygiene-switcher">
+            {ACTIVITY_TYPES.map((a) => (
+              <button
+                key={a.id}
+                className={`dog-pill ${activeActivity === a.id ? 'active' : ''}`}
+                onClick={() => setActiveActivity(a.id)}
+              >
+                {a.icon} {a.label}
+              </button>
+            ))}
           </div>
 
-          <p className="care-note">Log a walk</p>
-          <LogControls onLog={(min) => handleLogActivity('walk', min)} />
+          <div className="highlight-card highlight-card-solo">
+            <span className="highlight-label">{activeActivityConfig.label}</span>
+            <span className="highlight-value">{activityMinutesToday}/{activityTarget}m</span>
+          </div>
 
-          <p className="care-note" style={{ marginTop: '16px' }}>Log play time</p>
-          <LogControls onLog={(min) => handleLogActivity('play', min)} />
+          <p className="care-note">Log {activeActivityConfig.label.toLowerCase()} time</p>
+          <LogControls onLog={handleLogActivity} />
 
           <h3 className="history-heading">History</h3>
           {activityEvents.length === 0 && <p className="care-note">Nothing logged yet.</p>}
           <ul className="history-list">
             {activityEvents.map((e) => (
               <li key={e.id}>
-                <span className="history-type">{e.type === 'walk' ? 'Walk' : 'Play'}</span>
+                <span className="history-type">{activeActivityConfig.label}</span>
                 {formatEventTime(e.timestamp)} · {e.durationMinutes ?? '—'} min
               </li>
             ))}

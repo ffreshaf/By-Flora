@@ -12,6 +12,8 @@ const CARE_LABELS = {
   walk: { verb: 'walk', icon: '🐾' },
   play: { verb: 'play with', icon: '🎾' },
   bath: { verb: 'bathe', icon: '🛁' },
+  groom: { verb: 'groom', icon: '✂️' },
+  nails: { verb: 'trim the nails of', icon: '💅' },
 };
 
 function ConfirmCare() {

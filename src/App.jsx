@@ -39,11 +39,10 @@ import SettingsCareTargets from './pages/SettingsCareTargets.jsx';
 
 const NAV_ITEMS = [
   { to: '/', end: true, icon: '🏠', label: 'Home' },
-  { to: '/log', icon: '📋', label: 'Log' },
   { to: '/profile', icon: '👤', label: 'Profile' },
 ];
 
-const SWIPE_ROUTES = NAV_ITEMS.map((item) => item.to);
+const SWIPE_ROUTES = ['/', '/log', '/profile'];
 
 function App() {
   const [spinning, setSpinning] = useState(false);
@@ -198,17 +197,31 @@ function App() {
       </main>
 
       <nav className="bottom-nav">
-        {NAV_ITEMS.map(({ to, end, icon, label }) => (
+        <NavLink
+          to="/"
+          end
+          className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
+        >
+          <span className="nav-icon">🏠</span>
+          Home
+        </NavLink>
+
+        <div className="nav-fab-slot">
           <NavLink
-            key={to}
-            to={to}
-            end={end}
-            className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
+            to="/log"
+            className={({ isActive }) => `nav-fab${isActive ? ' active' : ''}`}
           >
-            <span className="nav-icon">{icon}</span>
-            {label}
+            <span className="nav-fab-icon">+</span>
           </NavLink>
-        ))}
+        </div>
+
+        <NavLink
+          to="/profile"
+          className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
+        >
+          <span className="nav-icon">👤</span>
+          Profile
+        </NavLink>
       </nav>
     </div>
   );
