@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "185062875197-sovk15glkn63uacpi20g3c9615mmn6c5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.flora.app",
+            "certificate_hash": "e05b421adb91dba4a1a385660164b5115b67a811"
+          }
+        },
+        {
           "client_id": "185062875197-1alr9ttl986n1ubjveiarmf7k4q11rfu.apps.googleusercontent.com",
           "client_type": 3
         }

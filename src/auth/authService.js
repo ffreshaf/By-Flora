@@ -1,16 +1,14 @@
-// src/auth/authService.js
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  signInWithPopup,
   GoogleAuthProvider,
+  signInWithCredential,
   signOut,
   updateProfile
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { db, auth } from '../firebase.js'; // wherever your initializeApp() lives
-
-const googleProvider = new GoogleAuthProvider();
+import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
+import { db, auth } from '../firebase.js';
 
 export async function signUpWithEmail(email, password, displayName) {
   const cred = await createUserWithEmailAndPassword(auth, email, password);
@@ -25,17 +23,27 @@ export async function signInWithEmail(email, password) {
 }
 
 export async function signInWithGoogle() {
-  // NOTE: on native iOS/Android this popup flow doesn't work reliably in a
-  // Capacitor WebView. For native builds, swap this for the
-  // @capacitor-firebase/authentication plugin's signInWithGoogle(), which
-  // uses native Google Sign-In and then hands Firebase a credential.
-  // Keep this version for web/dev testing.
-  const cred = await signInWithPopup(auth, googleProvider);
+  // Native Google Sign-In via the Capacitor plugin — signInWithPopup
+  // doesn't work in a native WebView, so this replaces it entirely.
+  const result = await FirebaseAuthentication.signInWithGoogle();
+
+  const idToken = result.credential?.idToken;
+  if (!idToken) {
+    throw new Error('Google sign-in did not return a valid credential.');
+  }
+
+  // Feed that native credential into the JS Firebase Auth SDK so the
+  // rest of the app (which reads `auth.currentUser` via onAuthChange)
+  // sees a normal, consistent user object.
+  const credential = GoogleAuthProvider.credential(idToken);
+  const cred = await signInWithCredential(auth, credential);
+
   await ensureUserDoc(cred.user, cred.user.displayName);
   return cred.user;
 }
 
 export async function logOut() {
+  await FirebaseAuthentication.signOut();
   await signOut(auth);
 }
 
