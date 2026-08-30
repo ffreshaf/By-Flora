@@ -1,22 +1,88 @@
-import { db } from '../db.js';
+import {
+  collection,
+  doc,
+  addDoc,
+  getDoc,
+  getDocs,
+  query,
+  where,
+  orderBy
+} from 'firebase/firestore';
 
-export async function logCareEvent(dogId, type, durationMinutes = null) {
-  // type: 'feed' | 'walk' | 'play' | 'bath'
-  return db.careEvents.add({
+import { db } from '../firebase.js';
+
+function careEventsRef(householdId, dogId) {
+  return collection(
+    db,
+    'households',
+    householdId,
+    'dogs',
     dogId,
-    type,
-    durationMinutes,
-    timestamp: Date.now()
-  });
+    'careEvents'
+  );
 }
 
-export async function getLastEvent(dogId, type) {
-  return db.careEvents
-    .where({ dogId, type })
-    .last();
+export async function logCareEvent(
+  householdId,
+  dogId,
+  type,
+  durationMinutes = null,
+  loggedBy = null,
+  loggedByName = null
+) {
+  const ref = await addDoc(
+    careEventsRef(householdId, dogId),
+    {
+      dogId,
+      type,
+      durationMinutes,
+      timestamp: Date.now(),
+      loggedBy,
+      loggedByName
+    }
+  );
+
+  return ref.id;
 }
 
-export async function getEventsForDog(dogId) {
-  const events = await db.careEvents.where('dogId').equals(dogId).toArray();
-  return events.sort((a, b) => b.timestamp - a.timestamp); // most recent first
+export async function getLastEvent(
+  householdId,
+  dogId,
+  type
+) {
+  const q = query(
+    careEventsRef(householdId, dogId),
+    where('type', '==', type),
+    orderBy('timestamp', 'desc')
+  );
+
+  const snap = await getDocs(q);
+
+  if (snap.empty) {
+    return null;
+  }
+
+  const eventDoc = snap.docs[0];
+
+  return {
+    id: eventDoc.id,
+    ...eventDoc.data()
+  };
+}
+
+export async function getEventsForDog(
+  householdId,
+  dogId
+) {
+  const q = query(
+    careEventsRef(householdId, dogId),
+    orderBy('timestamp', 'desc')
+  );
+
+  const snap = await getDocs(q);
+
+  return snap.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  }));
 }

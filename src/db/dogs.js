@@ -1,32 +1,65 @@
-import { db } from '../db.js';
-import { getSetting, setSetting } from './settings.js';
+import {
+  collection,
+  doc,
+  addDoc,
+  getDoc,
+  getDocs,
+  updateDoc,
+  deleteDoc
+} from 'firebase/firestore';
 
-export async function addDog(dog) {
-  return db.dogs.add(dog); // resolves to the new id
+import { db } from '../firebase.js';
+
+function dogsRef(householdId) {
+  return collection(
+    db,
+    'households',
+    householdId,
+    'dogs'
+  );
 }
 
-export async function updateDog(id, changes) {
-  await db.dogs.update(id, changes);
-  return id;
+export async function addDog(householdId, dog) {
+  const ref = await addDoc(
+    dogsRef(householdId),
+    dog
+  );
+
+  return ref.id;
 }
 
-export async function deleteDog(id) {
-  return db.dogs.delete(id);
+export async function updateDog(householdId, dogId, changes) {
+  await updateDoc(
+    doc(db, 'households', householdId, 'dogs', dogId),
+    changes
+  );
+
+  return dogId;
 }
 
-export async function getDog(id) {
-  return db.dogs.get(id);
+export async function deleteDog(householdId, dogId) {
+  await deleteDoc(
+    doc(db, 'households', householdId, 'dogs', dogId)
+  );
 }
 
-export async function getAllDogs() {
-  return db.dogs.toArray();
+export async function getDog(householdId, dogId) {
+  const snap = await getDoc(
+    doc(db, 'households', householdId, 'dogs', dogId)
+  );
+
+  return snap.exists()
+    ? { id: snap.id, ...snap.data() }
+    : null;
 }
 
-// Used outside React components (e.g. App.jsx notification setup)
-export async function getActiveDog() {
-  const dogs = await getAllDogs();
-  if (dogs.length === 0) return null;
+export async function getAllDogs(householdId) {
+  const snap = await getDocs(
+    dogsRef(householdId)
+  );
 
-  const activeId = await getSetting('activeDogId');
-  return dogs.find((d) => d.id === activeId) || dogs[0];
+  return snap.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  }));
 }

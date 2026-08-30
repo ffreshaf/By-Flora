@@ -12,18 +12,21 @@ import { calculateExerciseMinutes } from '../utils/exercise.js';
 
 import './Home.css';
 
+import { useAuth } from '../contexts/AuthContext.jsx';
+
 function Home() {
   const { dog, allDogs, loading, switchDog } = useDog();
+  const { household } = useAuth();
   const [events, setEvents] = useState([]);
 
   useEffect(() => {
-    if (dog) {
+    if (dog && household?.id) {
       loadEvents();
     }
-  }, [dog]);
+  }, [dog, household?.id]);
 
   async function loadEvents() {
-    const data = await getEventsForDog(dog.id);
+    const data = await getEventsForDog(household.id, dog.id);
     setEvents(data);
   }
 
@@ -106,12 +109,11 @@ function Home() {
         )
       : 0;
 
+  const playTarget = dog.playTargetMinutes ?? PLAY_TARGET;
+
   const playProgress =
-    PLAY_TARGET > 0
-      ? Math.min(
-          playMinutesToday / PLAY_TARGET,
-          1
-        )
+    playTarget > 0
+      ? Math.min(playMinutesToday / playTarget, 1)
       : 0;
 
   const overallProgress =
@@ -139,27 +141,28 @@ function Home() {
   return (
     <div className="home-page">
 
-      {/* DOG SWITCHER */}
-
-      {allDogs.length > 1 && (
-        <div className="dog-switcher">
-          {allDogs.map((d) => (
-            <button
-              key={d.id}
-              className={`dog-pill ${
-                dog.id === d.id ? 'active' : ''
-              }`}
-              onClick={() => switchDog(d.id)}
-            >
-              {d.name}
-            </button>
-          ))}
-        </div>
-      )}
-
       {/* HERO */}
 
       <section className="home-hero">
+
+        {/* DOG SWITCHER */}
+
+        {allDogs.length > 1 && (
+          <div className="dog-switcher">
+            {allDogs.map((d) => (
+              <button
+                key={d.id}
+                className={`dog-pill ${
+                  dog.id === d.id ? 'active' : ''
+                }`}
+                onClick={() => switchDog(d.id)}
+              >
+                {d.name}
+              </button>
+            ))}
+          </div>
+        )}
+
         <p className="home-greeting">
           {greeting} ☀️
         </p>
@@ -172,6 +175,7 @@ function Home() {
 
         <CareRing
           name={dog.name}
+          photo={dog.photo}
           progress={overallProgress}
         />
 

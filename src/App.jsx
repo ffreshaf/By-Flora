@@ -5,43 +5,45 @@ import {
   useLocation,
   useNavigate,
 } from 'react-router-dom';
+import { testFirebase } from './firebaseTest.js';
+
+import { useAuth } from './contexts/AuthContext.jsx';
 
 import { App as CapacitorApp } from '@capacitor/app';
 import { useEffect, useRef, useState } from 'react';
 import { LocalNotifications } from '@capacitor/local-notifications';
 
-import { logCareEvent } from './db/careEvents.js';
-import { getDog } from './db/dogs.js';
-
 import {
   requestNotificationPermission,
-  setupActionTypes,
   scheduleRemindersForAllDogs,
-  scheduleSmartReminders,
   cancelOrphanedReminders
 } from './utils/notifications.js';
+
+import { initPush } from './utils/push.js';
 
 import './App.css';
 
 import Home from './pages/Home.jsx';
 import Settings from './pages/Settings.jsx';
 import Profile from './pages/Profile.jsx';
-import Meals from './pages/Meals.jsx';
-import Activity from './pages/Activity.jsx';
-import Baths from './pages/Baths.jsx';
+import Log from './pages/Log.jsx';
 import About from './pages/About.jsx';
+import Login from './pages/Login.jsx';
+import HouseholdSetup from './pages/HouseholdSetup.jsx';
+import SettingsFamily from './pages/SettingsFamily.jsx';
+import SettingsDogs from './pages/SettingsDogs.jsx';
+import SettingsCustomReminders from './pages/SettingsCustomReminders.jsx';
+import SettingsReminderTimes from './pages/SettingsReminderTimes.jsx';
+import ConfirmCare from './pages/ConfirmCare.jsx';
+import SettingsCareTargets from './pages/SettingsCareTargets.jsx';
 import History from './pages/History.jsx';
 
 const NAV_ITEMS = [
   { to: '/', end: true, icon: '🏠', label: 'Home' },
-  { to: '/meals', icon: '🍖', label: 'Meals' },
-  { to: '/activity', icon: '🐾', label: 'Activity' },
-  { to: '/baths', icon: '🛁', label: 'Baths' },
-  { to: '/history', icon: '📊', label: 'History' },
   { to: '/profile', icon: '👤', label: 'Profile' },
 ];
 
-const SWIPE_ROUTES = NAV_ITEMS.map((item) => item.to);
+const SWIPE_ROUTES = ['/', '/log', '/profile'];
 
 function App() {
   const [spinning, setSpinning] = useState(false);
@@ -49,77 +51,70 @@ function App() {
   const navigate = useNavigate();
   const touchStart = useRef({ x: 0, y: 0 });
 
+  const { user, household, loading: authLoading } = useAuth();
+
   useEffect(() => {
     let notificationListener;
 
     async function initNotifications() {
       try {
-        const granted = await requestNotificationPermission();
-        if (!granted) {
-          console.log('Notifications are not permitted');
-          return;
-        }
-
-        await setupActionTypes();
-
-        try {
-          await cancelOrphanedReminders();
-        } catch (err) {
-          console.log('cancelOrphanedReminders failed (continuing anyway):', err);
-        }
-
-        try {
-          await scheduleRemindersForAllDogs();
-        } catch (err) {
-          console.log('scheduleRemindersForAllDogs failed (continuing anyway):', err);
-        }
-
-        // This MUST run regardless of whether the steps above succeeded
         notificationListener = await LocalNotifications.addListener(
           'localNotificationActionPerformed',
           async (action) => {
             console.log('Notification action received:', JSON.stringify(action));
 
-            try {
-              if (action.actionId === 'yes') {
-                const { careType, dogId } = action.notification.extra || {};
-                console.log('careType:', careType, 'dogId:', dogId);
+            const { careType, dogId } = action.notification.extra || {};
 
-                if (dogId && careType) {
-                  const dog = await getDog(dogId);
-                  console.log('Looked up dog:', dog);
-
-                  if (dog) {
-                    await logCareEvent(dog.id, careType, careType === 'feed' ? null : 20);
-                    console.log('Logged event for', dog.name);
-                    await scheduleSmartReminders(dog.id);
-                  }
-                } else {
-                  console.log('Missing dogId or careType in notification extra data');
-                }
-              }
-            } catch (err) {
-              console.log('Error handling notification action:', err);
+            if (careType && dogId) {
+              navigate(`/confirm?careType=${careType}&dogId=${dogId}`);
             }
-
-            CapacitorApp.minimizeApp();
           }
         );
 
         console.log('Notification listener registered successfully');
+
+        const granted = await requestNotificationPermission();
+
+        await initPush(user?.uid);
+
+        if (!granted) {
+          console.log('Notifications are not permitted');
+          return;
+        }
+
+        if (!household?.id) {
+          console.log('No household yet, skipping reminder scheduling');
+          return;
+        }
+
+        try {
+          await cancelOrphanedReminders(household.id);
+        } catch (err) {
+          console.log('cancelOrphanedReminders failed:', err);
+        }
+
+        try {
+          await scheduleRemindersForAllDogs(household.id);
+        } catch (err) {
+          console.log('scheduleRemindersForAllDogs failed:', err);
+        }
+
       } catch (err) {
-        console.log('initNotifications failed entirely:', err);
+        console.error('initNotifications failed:', err);
       }
     }
 
-    initNotifications();
+    if (user && household?.id) {
+      initNotifications();
+    }
 
     return () => {
       if (notificationListener) {
         notificationListener.remove();
+        notificationListener = null;
       }
     };
-  }, []);
+  }, [user, household?.id]);
 
   const handleLogoClick = () => {
     setSpinning(true);
@@ -161,6 +156,10 @@ function App() {
 
   const isSwipePage = SWIPE_ROUTES.includes(location.pathname);
 
+  if (authLoading) return <p>Loading...</p>;
+  if (!user) return <Login />;
+  if (!household) return <HouseholdSetup />;
+
   return (
     <div className="app-shell">
       <header>
@@ -184,29 +183,47 @@ function App() {
         <div key={location.pathname} className="route-stage">
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/meals" element={<Meals />} />
-            <Route path="/activity" element={<Activity />} />
-            <Route path="/baths" element={<Baths />} />
+            <Route path="/log" element={<Log />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/about" element={<About />} />
             <Route path="/history" element={<History />} />
+            <Route path="/settings/family" element={<SettingsFamily />} />
+            <Route path="/settings/dogs" element={<SettingsDogs />} />
+            <Route path="/settings/care-targets" element={<SettingsCareTargets />} />
+            <Route path="/settings/reminders" element={<SettingsCustomReminders />} />
+            <Route path="/settings/reminder-times" element={<SettingsReminderTimes />} />
+            <Route path="/confirm" element={<ConfirmCare />} />
           </Routes>
         </div>
       </main>
 
       <nav className="bottom-nav">
-        {NAV_ITEMS.map(({ to, end, icon, label }) => (
+        <NavLink
+          to="/"
+          end
+          className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
+        >
+          <span className="nav-icon">🏠</span>
+          Home
+        </NavLink>
+
+        <div className="nav-fab-slot">
           <NavLink
-            key={to}
-            to={to}
-            end={end}
-            className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
+            to="/log"
+            className={({ isActive }) => `nav-fab${isActive ? ' active' : ''}`}
           >
-            <span className="nav-icon">{icon}</span>
-            {label}
+            <span className="nav-fab-icon">+</span>
           </NavLink>
-        ))}
+        </div>
+
+        <NavLink
+          to="/profile"
+          className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
+        >
+          <span className="nav-icon">👤</span>
+          Profile
+        </NavLink>
       </nav>
     </div>
   );

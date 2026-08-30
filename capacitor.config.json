@@ -3,6 +3,10 @@
   "appName": "by-flora",
   "webDir": "dist",
   "plugins": {
+    "FirebaseAuthentication": {
+      "skipNativeAuth": false,
+      "providers": ["google.com"]
+    },
     "LocalNotifications": {
       "smallIcon": "ic_notification",
       "iconColor": "#DD7A3E"
