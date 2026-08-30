@@ -6,6 +6,8 @@ const ACTION_WORDS = {
   walk: 'walked',
   play: 'played with',
   bath: 'bathed',
+  groom: 'groomed',
+  nail: 'trimmed nails for',
 };
 
 export async function notifyOtherMembers({

@@ -1092,3 +1092,11 @@ main > .care-card:first-child {
 .log-tab-icon {
   font-size: 1.1rem;
 }
+
+.hygiene-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 16px;
+}

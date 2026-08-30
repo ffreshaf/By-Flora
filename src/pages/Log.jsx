@@ -14,13 +14,20 @@ import './Home.css';
 const TABS = [
   { id: 'meals', label: 'Meals', icon: '🍖' },
   { id: 'activity', label: 'Activity', icon: '🐾' },
-  { id: 'baths', label: 'Baths', icon: '🛁' },
+  { id: 'hygiene', label: 'Hygiene', icon: '🧴' },
+];
+
+const HYGIENE_TYPES = [
+  { id: 'bath', label: 'Bath', icon: '🛁', intervalField: 'bathIntervalDays', defaultInterval: 28 },
+  { id: 'groom', label: 'Groom', icon: '✂️', intervalField: 'groomIntervalDays', defaultInterval: 42 },
+  { id: 'nails', label: 'Nails', icon: '💅', intervalField: 'nailIntervalDays', defaultInterval: 21 },
 ];
 
 function Log() {
   const { dog, loading } = useDog();
   const { household, user } = useAuth();
   const [activeTab, setActiveTab] = useState('meals');
+  const [activeHygiene, setActiveHygiene] = useState('bath');
   const [events, setEvents] = useState([]);
 
   useEffect(() => {
@@ -65,8 +72,8 @@ function Log() {
     await logAndNotify(type, minutes, { reschedule: true });
   }
 
-  async function handleLogBath() {
-    await logAndNotify('bath');
+  async function handleLogHygiene(type) {
+    await logAndNotify(type);
   }
 
   if (loading) return <p>Loading...</p>;
@@ -74,7 +81,6 @@ function Log() {
 
   const mealEvents = events.filter((e) => e.type === 'feed');
   const activityEvents = events.filter((e) => e.type === 'walk' || e.type === 'play');
-  const bathEvents = events.filter((e) => e.type === 'bath');
 
   const { mealsPerDay, gramsPerMeal } = calculateDailyFood(dog);
   const mealsToday = mealEvents.filter((e) => e.timestamp >= startOfToday()).length;
@@ -88,7 +94,11 @@ function Log() {
     .filter((e) => e.type === 'play')
     .reduce((s, e) => s + (e.durationMinutes || 0), 0);
 
-  const bathStatus = getBathStatus(bathEvents[0]?.timestamp, dog.bathIntervalDays || 28);
+  const activeHygieneConfig = HYGIENE_TYPES.find((h) => h.id === activeHygiene);
+  const hygieneEvents = events.filter((e) => e.type === activeHygiene);
+  const hygieneIntervalDays = dog[activeHygieneConfig.intervalField] || activeHygieneConfig.defaultInterval;
+  const hygieneStatus = getBathStatus(hygieneEvents[0]?.timestamp, hygieneIntervalDays);
+  const playTarget = dog.playTargetMinutes ?? PLAY_TARGET;
 
   return (
     <div className="care-card">
@@ -158,21 +168,35 @@ function Log() {
         </div>
       )}
 
-      {activeTab === 'baths' && (
+      {activeTab === 'hygiene' && (
         <div className="log-panel">
-          <div className={`highlight-card highlight-card-solo ${bathStatus.isDue ? 'is-due-card' : ''}`}>
-            <span className="highlight-label">Status</span>
-            <span className="highlight-value highlight-value-small">{bathStatus.message}</span>
+          <div className="hygiene-switcher">
+            {HYGIENE_TYPES.map((h) => (
+              <button
+                key={h.id}
+                className={`dog-pill ${activeHygiene === h.id ? 'active' : ''}`}
+                onClick={() => setActiveHygiene(h.id)}
+              >
+                {h.icon} {h.label}
+              </button>
+            ))}
           </div>
 
-          <p className="care-note">Every {dog.bathIntervalDays || 28} days</p>
+          <div className={`highlight-card highlight-card-solo ${hygieneStatus.isDue ? 'is-due-card' : ''}`}>
+            <span className="highlight-label">Status</span>
+            <span className="highlight-value highlight-value-small">{hygieneStatus.message}</span>
+          </div>
 
-          <button className="btn btn-primary log-btn" onClick={handleLogBath}>Log a bath</button>
+          <p className="care-note">Every {hygieneIntervalDays} days</p>
+
+          <button className="btn btn-primary log-btn" onClick={() => handleLogHygiene(activeHygiene)}>
+            Log {activeHygieneConfig.label.toLowerCase()}
+          </button>
 
           <h3 className="history-heading">History</h3>
-          {bathEvents.length === 0 && <p className="care-note">No baths logged yet.</p>}
+          {hygieneEvents.length === 0 && <p className="care-note">No {activeHygieneConfig.label.toLowerCase()} logged yet.</p>}
           <ul className="history-list">
-            {bathEvents.map((e) => <li key={e.id}>{formatEventTime(e.timestamp)}</li>)}
+            {hygieneEvents.map((e) => <li key={e.id}>{formatEventTime(e.timestamp)}</li>)}
           </ul>
         </div>
       )}

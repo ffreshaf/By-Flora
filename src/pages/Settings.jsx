@@ -34,6 +34,15 @@ function Settings() {
           <span className="settings-nav-chevron">›</span>
         </Link>
 
+        <Link to="/settings/care-targets" className="settings-nav-item">
+          <span className="settings-nav-icon">🎯</span>
+          <span className="settings-nav-text">
+            <strong>Care targets</strong>
+            <span>Food, exercise & hygiene overrides</span>
+          </span>
+          <span className="settings-nav-chevron">›</span>
+        </Link>
+
         <Link to="/settings/reminders" className="settings-nav-item">
           <span className="settings-nav-icon">⏰</span>
           <span className="settings-nav-text">

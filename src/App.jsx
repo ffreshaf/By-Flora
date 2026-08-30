@@ -35,6 +35,7 @@ import SettingsDogs from './pages/SettingsDogs.jsx';
 import SettingsCustomReminders from './pages/SettingsCustomReminders.jsx';
 import SettingsReminderTimes from './pages/SettingsReminderTimes.jsx';
 import ConfirmCare from './pages/ConfirmCare.jsx';
+import SettingsCareTargets from './pages/SettingsCareTargets.jsx';
 
 const NAV_ITEMS = [
   { to: '/', end: true, icon: '🏠', label: 'Home' },
@@ -188,6 +189,7 @@ function App() {
             <Route path="/about" element={<About />} />
             <Route path="/settings/family" element={<SettingsFamily />} />
             <Route path="/settings/dogs" element={<SettingsDogs />} />
+            <Route path="/settings/care-targets" element={<SettingsCareTargets />} />
             <Route path="/settings/reminders" element={<SettingsCustomReminders />} />
             <Route path="/settings/reminder-times" element={<SettingsReminderTimes />} />
             <Route path="/confirm" element={<ConfirmCare />} />

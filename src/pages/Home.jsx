@@ -109,12 +109,11 @@ function Home() {
         )
       : 0;
 
+  const playTarget = dog.playTargetMinutes ?? PLAY_TARGET;
+
   const playProgress =
-    PLAY_TARGET > 0
-      ? Math.min(
-          playMinutesToday / PLAY_TARGET,
-          1
-        )
+    playTarget > 0
+      ? Math.min(playMinutesToday / playTarget, 1)
       : 0;
 
   const overallProgress =
