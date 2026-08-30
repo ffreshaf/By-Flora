@@ -539,9 +539,6 @@ export async function scheduleSmartReminders(
         allowWhileIdle: true
       },
 
-      actionTypeId:
-        'CARE_CONFIRM',
-
       extra: {
         careType: slot.careType,
         dogId

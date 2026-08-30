@@ -13,19 +13,13 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { useEffect, useRef, useState } from 'react';
 import { LocalNotifications } from '@capacitor/local-notifications';
 
-import { logCareEvent } from './db/careEvents.js';
-import { getDog } from './db/dogs.js';
-
 import {
   requestNotificationPermission,
-  setupActionTypes,
   scheduleRemindersForAllDogs,
-  scheduleSmartReminders,
   cancelOrphanedReminders
 } from './utils/notifications.js';
 
 import { initPush } from './utils/push.js';
-import { notifyOtherMembers } from './utils/pushNotify.js';
 
 import './App.css';
 
@@ -42,6 +36,7 @@ import SettingsFamily from './pages/SettingsFamily.jsx';
 import SettingsDogs from './pages/SettingsDogs.jsx';
 import SettingsCustomReminders from './pages/SettingsCustomReminders.jsx';
 import SettingsReminderTimes from './pages/SettingsReminderTimes.jsx';
+import ConfirmCare from './pages/ConfirmCare.jsx';
 
 const NAV_ITEMS = [
   { to: '/', end: true, icon: '🏠', label: 'Home' },
@@ -66,62 +61,16 @@ function App() {
 
     async function initNotifications() {
       try {
-        await setupActionTypes();
-
         notificationListener = await LocalNotifications.addListener(
           'localNotificationActionPerformed',
           async (action) => {
             console.log('Notification action received:', JSON.stringify(action));
 
-            try {
-              if (action.actionId === 'yes') {
-                const { careType, dogId } = action.notification.extra || {};
+            const { careType, dogId } = action.notification.extra || {};
 
-                console.log('careType:', careType);
-                console.log('dogId:', dogId);
-
-                if (!dogId || !careType || !household?.id) {
-                  console.log('Missing dogId, careType, or household ID');
-                  return;
-                }
-
-                const dog = await getDog(household.id, dogId);
-
-                console.log('Looked up dog:', dog);
-
-                if (!dog) {
-                  console.log('Dog not found:', dogId);
-                  return;
-                }
-
-                const eventId = await logCareEvent(
-                  household.id,
-                  dog.id,
-                  careType,
-                  careType === 'feed' ? null : 20,
-                  user.uid,
-                  user.displayName || user.email
-                );
-
-                console.log('Care event logged successfully:', eventId);
-
-                await notifyOtherMembers({
-                  household,
-                  loggerUid: user.uid,
-                  loggerName: user.displayName || user.email,
-                  dogName: dog.name,
-                  careType,
-                });
-
-                await scheduleSmartReminders(household.id, dog.id);
-
-                console.log('Reminder schedule updated for:', dog.name);
-              }
-            } catch (err) {
-              console.error('Error handling notification action:', err);
+            if (careType && dogId) {
+              navigate(`/confirm?careType=${careType}&dogId=${dogId}`);
             }
-
-            await CapacitorApp.minimizeApp();
           }
         );
 
@@ -247,6 +196,7 @@ function App() {
             <Route path="/settings/dogs" element={<SettingsDogs />} />
             <Route path="/settings/reminders" element={<SettingsCustomReminders />} />
             <Route path="/settings/reminder-times" element={<SettingsReminderTimes />} />
+            <Route path="/confirm" element={<ConfirmCare />} />
           </Routes>
         </div>
       </main>
