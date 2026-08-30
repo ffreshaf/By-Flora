@@ -26,9 +26,7 @@ import './App.css';
 import Home from './pages/Home.jsx';
 import Settings from './pages/Settings.jsx';
 import Profile from './pages/Profile.jsx';
-import Meals from './pages/Meals.jsx';
-import Activity from './pages/Activity.jsx';
-import Baths from './pages/Baths.jsx';
+import Log from './pages/Log.jsx';
 import About from './pages/About.jsx';
 import Login from './pages/Login.jsx';
 import HouseholdSetup from './pages/HouseholdSetup.jsx';
@@ -40,9 +38,7 @@ import ConfirmCare from './pages/ConfirmCare.jsx';
 
 const NAV_ITEMS = [
   { to: '/', end: true, icon: '🏠', label: 'Home' },
-  { to: '/meals', icon: '🍖', label: 'Meals' },
-  { to: '/activity', icon: '🐾', label: 'Activity' },
-  { to: '/baths', icon: '🛁', label: 'Baths' },
+  { to: '/log', icon: '📋', label: 'Log' },
   { to: '/profile', icon: '👤', label: 'Profile' },
 ];
 
@@ -186,9 +182,7 @@ function App() {
         <div key={location.pathname} className="route-stage">
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/meals" element={<Meals />} />
-            <Route path="/activity" element={<Activity />} />
-            <Route path="/baths" element={<Baths />} />
+            <Route path="/log" element={<Log />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/about" element={<About />} />
