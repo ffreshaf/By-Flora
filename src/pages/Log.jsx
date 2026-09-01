@@ -10,6 +10,7 @@ import { scheduleSmartReminders, scheduleHygieneReminders } from '../utils/notif
 import { notifyOtherMembers } from '../utils/pushNotify.js';
 import { HYGIENE_TYPES } from '../utils/hygiene.js';
 import LogControls from '../components/LogControls.jsx';
+import { Link } from 'react-router-dom';
 import './Home.css';
 
 const TABS = [
@@ -81,23 +82,26 @@ function Log() {
   if (loading) return <p>Loading...</p>;
   if (!dog) return <p className="care-note">Set up her profile in Settings first.</p>;
 
-  const mealEvents = events.filter((e) => e.type === 'feed');
+  const mealEventsAll = events.filter((e) => e.type === 'feed');
+  const mealEvents = mealEventsAll.slice(0, 5);
 
   const { mealsPerDay, gramsPerMeal } = calculateDailyFood(dog);
-  const mealsToday = mealEvents.filter((e) => e.timestamp >= startOfToday()).length;
+  const mealsToday = mealEventsAll.filter((e) => e.timestamp >= startOfToday()).length;
 
   const { minutesPerDay: exerciseTarget } = calculateExerciseMinutes(dog);
   const playTarget = dog.playTargetMinutes ?? PLAY_TARGET;
 
+
+  const activityEventsAll = events.filter((e) => e.type === activeActivity);
   const activeActivityConfig = ACTIVITY_TYPES.find((a) => a.id === activeActivity);
-  const activityEvents = events.filter((e) => e.type === activeActivity);
+  const activityEvents = activityEventsAll.slice(0, 5);
   const activityTarget = activeActivity === 'walk' ? exerciseTarget : playTarget;
-  const activityMinutesToday = activityEvents
+  const activityMinutesToday = activityEventsAll
     .filter((e) => e.timestamp >= startOfToday())
     .reduce((s, e) => s + (e.durationMinutes || 0), 0);
 
   const activeHygieneConfig = HYGIENE_TYPES.find((h) => h.id === activeHygiene);
-  const hygieneEvents = events.filter((e) => e.type === activeHygiene);
+  const hygieneEvents = events.filter((e) => e.type === activeHygiene).slice(5);
   const hygieneIntervalDays = dog[activeHygieneConfig.intervalField] || activeHygieneConfig.defaultInterval;
   const hygieneStatus = getHygieneStatus(hygieneEvents[0]?.timestamp, hygieneIntervalDays, activeHygieneConfig.label);
 
@@ -134,6 +138,10 @@ function Log() {
           <ul className="history-list">
             {mealEvents.map((e) => <li key={e.id}>{formatEventTime(e.timestamp)}</li>)}
           </ul>
+
+          {mealEvents.length > 0 && (
+            <Link to="/history" className="history-see-all">See full history →</Link>
+          )}
         </div>
       )}
 
@@ -169,6 +177,10 @@ function Log() {
               </li>
             ))}
           </ul>
+
+          {activityEvents.length > 0 && (
+            <Link to="/history" className="history-see-all">See full history →</Link>
+          )}
         </div>
       )}
 
@@ -202,6 +214,10 @@ function Log() {
           <ul className="history-list">
             {hygieneEvents.map((e) => <li key={e.id}>{formatEventTime(e.timestamp)}</li>)}
           </ul>
+
+          {hygieneEvents.length > 0 && (
+            <Link to="/history" className="history-see-all">See full history →</Link>
+          )}
         </div>
       )}
     </div>

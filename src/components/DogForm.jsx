@@ -50,7 +50,9 @@ function DogForm({ initialDog, onSave }) {
   const [name, setName] = useState(initialDog?.name || '');
   const [breed, setBreed] = useState(initialDog?.breed || '');
   const [photo, setPhoto] = useState(initialDog?.photo || '');
-  const [ageMonths, setAgeMonths] = useState(initialDog?.ageMonths || '');
+  const initialAgeMonths = Number(initialDog?.ageMonths || 0);
+  const [ageYears, setAgeYears] = useState(initialAgeMonths ? Math.floor(initialAgeMonths / 12) : '');
+  const [ageExtraMonths, setAgeExtraMonths] = useState(initialAgeMonths ? initialAgeMonths % 12 : '');
   const [weightKg, setWeightKg] = useState(initialDog?.weightKg || '');
   const [size, setSize] = useState(initialDog?.size || 'medium');
   const [activityLevel, setActivityLevel] = useState(initialDog?.activityLevel || 'moderate');
@@ -99,8 +101,12 @@ function DogForm({ initialDog, onSave }) {
       return;
     }
 
-    if (!ageMonths || Number(ageMonths) <= 0) {
-      setError('Please enter a valid age in months.');
+    const totalAgeMonths =
+      Number(ageYears || 0) * 12 +
+      Number(ageExtraMonths || 0);
+
+    if (totalAgeMonths <= 0) {
+      setError('Please enter a valid age.');
       return;
     }
 
@@ -116,7 +122,7 @@ function DogForm({ initialDog, onSave }) {
       breed: breed.trim(),
       photo,
 
-      ageMonths: Number(ageMonths),
+      ageMonths: totalAgeMonths,
       weightKg: Number(weightKg),
       size,
       activityLevel,
@@ -201,15 +207,31 @@ function DogForm({ initialDog, onSave }) {
       </div>
 
       <div className="form-group">
-        <label htmlFor="age">Age (months)</label>
-        <input
-          id="age"
-          type="number"
-          min="0"
-          value={ageMonths}
-          onChange={(e) => setAgeMonths(e.target.value)}
-          placeholder="e.g. 24"
-        />
+        <label htmlFor="age">Age</label>
+
+        <div className="age-input-row">
+          <div>
+          <input
+            type="number"
+            min="0"
+            value={ageYears}
+            onChange={(e) => setAgeYears(e.target.value)}
+            placeholder="e.g. 2"
+          />
+          <small>years</small>
+          </div>
+
+          <div>
+          <input
+            type="number"
+            min="0"
+            value={ageExtraMonths}
+            onChange={(e) => setAgeExtraMonths(e.target.value)}
+            placeholder="e.g. 6"
+          />
+          <small>months</small>
+          </div>
+        </div>
       </div>
 
       <div className="form-group">

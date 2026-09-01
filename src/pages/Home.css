@@ -1413,3 +1413,28 @@ main > .care-card:first-child {
 .month-day.has-activity .month-day-number {
   color: white;
 }
+
+.history-see-all {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--sage);
+  text-decoration: none;
+}
+
+.age-input-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.age-input-row > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.age-input-row input {
+  width: 100%;
+}
