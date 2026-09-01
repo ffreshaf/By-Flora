@@ -1,14 +1,5 @@
-const ONESIGNAL_APP_ID = '99029f45-35cb-484b-941f-fafa21c8fe2e';
-const ONESIGNAL_REST_API_KEY = import.meta.env.VITE_ONESIGNAL_REST_API_KEY;
-
-const ACTION_WORDS = {
-  feed: 'fed',
-  walk: 'walked',
-  play: 'played with',
-  bath: 'bathed',
-  groom: 'groomed',
-  nail: 'trimmed nails for',
-};
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export async function notifyOtherMembers({
   household,
@@ -19,34 +10,39 @@ export async function notifyOtherMembers({
 }) {
   if (!household?.memberUids) return;
 
-  const otherUids = household.memberUids.filter((uid) => uid !== loggerUid);
+  const otherUids = household.memberUids.filter(
+    (uid) => uid !== loggerUid
+  );
+
   if (otherUids.length === 0) return;
 
-  if (!ONESIGNAL_REST_API_KEY) {
-    console.warn('[push] Missing OneSignal REST API key — skipping notify.');
-    return;
-  }
-
-  const actionWord = ACTION_WORDS[careType] || 'cared for';
-
   try {
-    const response = await fetch('https://onesignal.com/api/v1/notifications', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Basic ${ONESIGNAL_REST_API_KEY}`,
-      },
-      body: JSON.stringify({
-        app_id: ONESIGNAL_APP_ID,
-        include_aliases: { external_id: otherUids },
-        target_channel: 'push',
-        headings: { en: `${dogName} update 🐾` },
-        contents: { en: `${loggerName || 'Someone'} just ${actionWord} ${dogName}.` },
-      }),
-    });
+    const response = await fetch(
+      `${SUPABASE_URL}/functions/v1/notify-other-members`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({
+          otherUids,
+          loggerName,
+          dogName,
+          careType,
+        }),
+      }
+    );
 
     const result = await response.json();
-    console.log('[push] notifyOtherMembers result:', result);
+
+    if (!response.ok) {
+      throw new Error(result?.error || 'Notification request failed');
+    }
+
+    console.log('[push] Supabase notification result:', result);
+
+    return result;
   } catch (err) {
     console.error('[push] Failed to notify household:', err);
   }

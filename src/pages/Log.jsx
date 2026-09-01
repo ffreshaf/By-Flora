@@ -101,7 +101,7 @@ function Log() {
     .reduce((s, e) => s + (e.durationMinutes || 0), 0);
 
   const activeHygieneConfig = HYGIENE_TYPES.find((h) => h.id === activeHygiene);
-  const hygieneEvents = events.filter((e) => e.type === activeHygiene).slice(5);
+  const hygieneEvents = events.filter((e) => e.type === activeHygiene).slice(0, 5);
   const hygieneIntervalDays = dog[activeHygieneConfig.intervalField] || activeHygieneConfig.defaultInterval;
   const hygieneStatus = getHygieneStatus(hygieneEvents[0]?.timestamp, hygieneIntervalDays, activeHygieneConfig.label);
 
