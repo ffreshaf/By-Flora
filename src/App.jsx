@@ -5,7 +5,6 @@ import {
   useLocation,
   useNavigate,
 } from 'react-router-dom';
-import { testFirebase } from './firebaseTest.js';
 
 import { useAuth } from './contexts/AuthContext.jsx';
 
