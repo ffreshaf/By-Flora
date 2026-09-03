@@ -5,6 +5,10 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase.js';
 
+import { auth } from '../firebase.js';
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+
 function generateInviteCode() {
   // short, human-typeable, e.g. "FLORA-7QK2"
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -58,33 +62,32 @@ export async function getHouseholdMembers(householdId) {
 }
 
 export async function joinHouseholdByCode(uid, code) {
-  const normalizedCode = code.trim().toUpperCase();
-
-  const inviteSnap = await getDoc(
-    doc(db, 'inviteCodes', normalizedCode)
-  );
-
-  if (!inviteSnap.exists()) {
-    throw new Error('No household found with that invite code.');
+  const currentUser = auth.currentUser;
+  if (!currentUser) {
+    throw new Error('You must be signed in to join a household.');
   }
 
-  const { householdId } = inviteSnap.data();
+  const idToken = await currentUser.getIdToken();
 
-  await updateDoc(
-    doc(db, 'households', householdId),
+  const response = await fetch(
+    `${SUPABASE_URL}/functions/v1/join-household`,
     {
-      memberUids: arrayUnion(uid)
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${idToken}`,
+      },
+      body: JSON.stringify({ code }),
     }
   );
 
-  await updateDoc(
-    doc(db, 'users', uid),
-    {
-      householdId
-    }
-  );
+  const result = await response.json();
 
-  return householdId;
+  if (!response.ok) {
+    throw new Error(result?.error || 'Failed to join household.');
+  }
+
+  return result.householdId;
 }
 
 export async function getHousehold(householdId) {
