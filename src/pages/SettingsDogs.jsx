@@ -6,6 +6,9 @@ import { addDog, updateDog, deleteDog } from '../db/dogs.js';
 import { scheduleSmartReminders, cancelRemindersForDog } from '../utils/notifications.js';
 import DogForm from '../components/DogForm.jsx';
 import './Home.css';
+import { auth } from '../firebase.js';
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
 function SettingsDogs() {
   const { dog, allDogs, loading, reload, switchDog } = useDog();
@@ -46,11 +49,32 @@ function SettingsDogs() {
     }
   }
 
+  
+  async function deleteDogPhoto(householdId, photoPath) {
+    if (!photoPath) return;
+
+    try {
+      const idToken = await auth.currentUser.getIdToken();
+
+      await fetch(`${SUPABASE_URL}/functions/v1/upload-dog-photo`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({ householdId, oldPath: photoPath, deleteOnly: true }),
+      });
+    } catch (err) {
+      console.warn('Could not delete photo from storage:', err);
+    }
+  }
+
   async function handleDelete() {
     if (!dog) return;
     if (!confirm(`Remove ${dog.name}'s profile? This can't be undone.`)) return;
 
     await cancelRemindersForDog(household.id, dog.id);
+    await deleteDogPhoto(household.id, dog.photoPath);
     await deleteDog(household.id, dog.id);
     await reload();
   }
@@ -77,7 +101,7 @@ function SettingsDogs() {
         </div>
       )}
 
-      <DogForm key={addingNew ? 'new' : dog?.id} initialDog={addingNew ? null : dog} onSave={handleSave} />
+      <DogForm key={addingNew ? 'new' : dog?.id} initialDog={addingNew ? null : dog} householdId={household?.id} onSave={handleSave} />
 
       {saved && (
         <div className="save-confirmation">

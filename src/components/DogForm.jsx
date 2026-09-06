@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { auth } from '../firebase.js';
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
 const SIZES = ['small', 'medium', 'large', 'giant'];
 
@@ -46,10 +49,11 @@ function resizeImage(file, maxSize = 700) {
   });
 }
 
-function DogForm({ initialDog, onSave }) {
+function DogForm({ initialDog, householdId, onSave }) {
   const [name, setName] = useState(initialDog?.name || '');
   const [breed, setBreed] = useState(initialDog?.breed || '');
   const [photo, setPhoto] = useState(initialDog?.photo || '');
+  const [photoPath, setPhotoPath] = useState(initialDog?.photoPath || '');
   const initialAgeMonths = Number(initialDog?.ageMonths || 0);
   const [ageYears, setAgeYears] = useState(initialAgeMonths ? Math.floor(initialAgeMonths / 12) : '');
   const [ageExtraMonths, setAgeExtraMonths] = useState(initialAgeMonths ? initialAgeMonths % 12 : '');
@@ -62,6 +66,8 @@ function DogForm({ initialDog, onSave }) {
 
   const [error, setError] = useState('');
   const [photoError, setPhotoError] = useState('');
+
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   async function handlePhotoChange(e) {
     const file = e.target.files?.[0];
@@ -80,17 +86,61 @@ function DogForm({ initialDog, onSave }) {
       return;
     }
 
+    setUploadingPhoto(true);
+
     try {
-      const compressedPhoto = await resizeImage(file);
-      setPhoto(compressedPhoto);
+      const compressedDataUrl = await resizeImage(file);
+      const idToken = await auth.currentUser.getIdToken();
+
+      const response = await fetch(
+        `${SUPABASE_URL}/functions/v1/upload-dog-photo`,
+      {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${idToken}`,
+          },
+          body: JSON.stringify({ householdId, dataUrl: compressedDataUrl, oldPath: photoPath || undefined }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result?.error || 'Upload failed');
+      }
+
+      setPhoto(result.url);
+      setPhotoPath(result.path);
+
     } catch (error) {
       console.error('Could not process dog photo:', error);
       setPhotoError('Could not use that photo. Please try another one.');
+    } finally {
+      setUploadingPhoto(false);
     }
   }
 
-  function removePhoto() {
+  async function removePhoto() {
+    if (photoPath) {
+      try {
+        const idToken = await auth.currentUser.getIdToken();
+
+        await fetch(`${SUPABASE_URL}/functions/v1/upload-dog-photo`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${idToken}`,
+          },
+          body: JSON.stringify({ householdId, oldPath: photoPath, deleteOnly: true }),
+        });
+      } catch (err) {
+        console.warn('Could not delete photo from storage:', err);
+      }
+    }
+
     setPhoto('');
+    setPhotoPath('');
   }
 
   const handleSubmit = (e) => {
@@ -121,7 +171,7 @@ function DogForm({ initialDog, onSave }) {
       name: name.trim(),
       breed: breed.trim(),
       photo,
-
+      photoPath,
       ageMonths: totalAgeMonths,
       weightKg: Number(weightKg),
       size,
@@ -152,7 +202,7 @@ function DogForm({ initialDog, onSave }) {
         <div className="dog-photo-actions">
 
           <label htmlFor="dog-photo" className="btn btn-secondary dog-photo-button">
-            {photo ? 'Change photo' : 'Add a photo'}
+            {uploadingPhoto ? 'Uploading photo...' : photo ? 'Change photo' : 'Add a photo'}
           </label>
 
           <input
@@ -161,6 +211,7 @@ function DogForm({ initialDog, onSave }) {
             accept="image/*"
             onChange={handlePhotoChange}
             hidden
+            disabled={uploadingPhoto}
           />
 
           {photo && (
