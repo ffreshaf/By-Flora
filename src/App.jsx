@@ -50,7 +50,7 @@ function App() {
   const navigate = useNavigate();
   const touchStart = useRef({ x: 0, y: 0 });
 
-  const { user, household, loading: authLoading } = useAuth();
+  const { user, household, emailVerified, loading: authLoading } = useAuth();
 
   useEffect(() => {
     let notificationListener;
@@ -157,6 +157,10 @@ function App() {
 
   if (authLoading) return <p>Loading...</p>;
   if (!user) return <Login />;
+
+  if (!emailVerified) {
+    return <Login verificationOnly />;
+  }
   if (!household) return <HouseholdSetup />;
 
   return (

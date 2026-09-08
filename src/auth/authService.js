@@ -2,6 +2,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
+  sendEmailVerification,
   GoogleAuthProvider,
   signInWithCredential,
   signOut,
@@ -15,6 +16,8 @@ export async function signUpWithEmail(email, password, displayName) {
   const cred = await createUserWithEmailAndPassword(auth, email, password);
   await updateProfile(cred.user, { displayName });
   await ensureUserDoc(cred.user, displayName);
+
+  await sendEmailVerification(cred.user);
   return cred.user;
 }
 
@@ -22,8 +25,35 @@ export async function resetPassword(email) {
   await sendPasswordResetEmail(auth, email);
 }
 
+export async function sendVerificationEmail() {
+  if (!auth.currentUser) {
+    throw new Error('No signed-in user.');
+  }
+
+  await sendEmailVerification(auth.currentUser);
+}
+
+export async function reloadCurrentUser() {
+  if (!auth.currentUser) return null;
+
+  await auth.currentUser.reload();
+
+  return auth.currentUser;
+}
+
 export async function signInWithEmail(email, password) {
   const cred = await signInWithEmailAndPassword(auth, email, password);
+
+  await cred.user.reload();
+
+  if (!cred.user.emailVerified) {
+    await signOut(auth);
+
+    throw new Error(
+      'Please verify your email address before signing in.'
+    );
+  }
+
   return cred.user;
 }
 

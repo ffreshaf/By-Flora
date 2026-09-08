@@ -1445,7 +1445,7 @@ main > .care-card:first-child {
   padding: 0;
   font-size: 0.85rem;
   color: #666;
-  text-decoration: underline;
+  text-decoration: none;
   cursor: pointer;
   text-align: right;
   margin-top: -4px;
