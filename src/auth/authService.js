@@ -1,6 +1,7 @@
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  sendPasswordResetEmail,
   GoogleAuthProvider,
   signInWithCredential,
   signOut,
@@ -15,6 +16,10 @@ export async function signUpWithEmail(email, password, displayName) {
   await updateProfile(cred.user, { displayName });
   await ensureUserDoc(cred.user, displayName);
   return cred.user;
+}
+
+export async function resetPassword(email) {
+  await sendPasswordResetEmail(auth, email);
 }
 
 export async function signInWithEmail(email, password) {

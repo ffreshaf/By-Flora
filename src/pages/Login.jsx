@@ -1,14 +1,15 @@
 import { useState } from 'react';
-import { signInWithEmail, signUpWithEmail, signInWithGoogle } from '../auth/authService.js';
+import { signInWithEmail, signUpWithEmail, signInWithGoogle, resetPassword } from '../auth/authService.js';
 import './Auth.css';
 
 function Login() {
-  const [mode, setMode] = useState('signin'); // 'signin' | 'signup'
+  const [mode, setMode] = useState('signin'); // 'signin' | 'signup' | 'reset'
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -41,6 +42,85 @@ function Login() {
     }
   }
 
+  async function handleReset(e) {
+    e.preventDefault();
+    setError('');
+
+    if (!email.trim()) {
+      setError('Please enter your email.');
+      return;
+    }
+
+    setBusy(true);
+
+    try {
+      await resetPassword(email.trim());
+      setResetSent(true);
+    } catch (err) {
+      setError(friendlyAuthError(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function switchMode(newMode) {
+    setMode(newMode);
+    setError('');
+    setResetSent(false);
+  }
+
+  if (mode === 'reset') {
+    return (
+      <div className="auth-page">
+        <div className="auth-badge">🔑</div>
+
+        <div className="care-card auth-card">
+          <h2 className="auth-title">Reset your password</h2>
+
+          {resetSent ? (
+            <>
+              <p className="auth-subtitle">
+                We've sent a password reset link to <strong>{email}</strong>. Check your inbox (and spam folder) for the link.
+              </p>
+              <button type="button" className="back-link" onClick={() => switchMode('signin')}>
+                ← Back to sign in
+              </button>
+            </>
+          ) : (
+            <>
+              <p className="auth-subtitle">
+                Enter your email and we'll send you a link to reset your password.
+              </p>
+
+              <form onSubmit={handleReset} className="dog-form">
+                <div className="form-group">
+                  <label htmlFor="reset-email">Email</label>
+                  <input
+                    id="reset-email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@email.com"
+                  />
+                </div>
+
+                {error && <p className="form-error">{error}</p>}
+
+                <button type="submit" className="auth-submit" disabled={busy}>
+                  {busy ? 'Sending…' : 'Send reset link'}
+                </button>
+              </form>
+
+              <button type="button" className="back-link" onClick={() => switchMode('signin')}>
+                ← Back to sign in
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="auth-page">
       <div className="auth-badge">🐾</div>
@@ -50,14 +130,14 @@ function Login() {
           <button
             type="button"
             className={`auth-tab ${mode === 'signin' ? 'active' : ''}`}
-            onClick={() => setMode('signin')}
+            onClick={() => switchMode('signin')}
           >
             Sign in
           </button>
           <button
             type="button"
             className={`auth-tab ${mode === 'signup' ? 'active' : ''}`}
-            onClick={() => setMode('signup')}
+            onClick={() => switchMode('signup')}
           >
             Sign up
           </button>
@@ -89,6 +169,12 @@ function Login() {
             <label htmlFor="password">Password</label>
             <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
           </div>
+
+          {mode === 'signin' && (
+            <button type="button" className="auth-forgot-link" onClick={() => switchMode('reset')}>
+              Forgot password?
+            </button>
+          )}
 
           {error && <p className="form-error">{error}</p>}
 
