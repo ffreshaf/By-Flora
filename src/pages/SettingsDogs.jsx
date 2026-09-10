@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useDog } from '../hooks/useDog.js';
+import { useDog } from '../contexts/DogContext.jsx';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { addDog, updateDog, deleteDog } from '../db/dogs.js';
 import { scheduleSmartReminders, cancelRemindersForDog } from '../utils/notifications.js';

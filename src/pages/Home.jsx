@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
-import { useDog } from '../hooks/useDog.js';
+import { useDog } from '../contexts/DogContext.jsx';
 import { getEventsForDog } from '../db/careEvents.js';
 import { startOfToday, PLAY_TARGET } from '../utils/reminders.js';
 
@@ -13,6 +13,8 @@ import { calculateExerciseMinutes } from '../utils/exercise.js';
 import './Home.css';
 
 import { useAuth } from '../contexts/AuthContext.jsx';
+
+import HomeSkeleton from '../components/HomeSkeleton.jsx';
 
 function Home() {
   const { dog, allDogs, loading, switchDog } = useDog();
@@ -31,7 +33,7 @@ function Home() {
   }
 
   if (loading) {
-    return <p>Loading...</p>;
+    return <HomeSkeleton />;
   }
 
   if (!dog) {

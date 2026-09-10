@@ -1,7 +1,7 @@
 // src/contexts/AuthContext.jsx
 import { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthChange, reloadCurrentUser } from '../auth/authService.js';
-import { getMyUserDoc, getHousehold } from '../db/households.js';
+import { getMyUserDoc, getHousehold, getHouseholdMembers } from '../db/households.js';
 
 const AuthContext = createContext(null);
 
@@ -9,6 +9,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);       // Firebase auth user
   const [userDoc, setUserDoc] = useState(null);  // users/{uid} doc
   const [household, setHousehold] = useState(null);
+  const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [emailVerified, setEmailVerified] = useState(false);
 
@@ -20,6 +21,7 @@ export function AuthProvider({ children }) {
         setUser(null);
         setUserDoc(null);
         setHousehold(null);
+        setMembers([]);
         setLoading(false);
         return;
       }
@@ -34,11 +36,16 @@ export function AuthProvider({ children }) {
       const doc = await getMyUserDoc(firebaseUser.uid);
       setUserDoc(doc);
 
+      let h = null;
       if (doc?.householdId) {
-        const h = await getHousehold(doc.householdId);
-        setHousehold(h);
+        h = await getHousehold(doc.householdId);
+      }
+      setHousehold(h);
+
+      if (h) {
+        setMembers(await getHouseholdMembers(h.id));
       } else {
-        setHousehold(null);
+        setMembers([]);
       }
 
       setLoading(false);
@@ -47,16 +54,20 @@ export function AuthProvider({ children }) {
     return unsubscribe;
   }, []);
 
-
-
   // Call this after joining/creating a household so state updates
   // without waiting for a full re-login.
   async function refreshHousehold() {
     if (!user) return;
     const doc = await getMyUserDoc(user.uid);
     setUserDoc(doc);
+
     if (doc?.householdId) {
-      setHousehold(await getHousehold(doc.householdId));
+      const h = await getHousehold(doc.householdId);
+      setHousehold(h);
+      setMembers(h ? await getHouseholdMembers(h.id) : []);
+    } else {
+      setHousehold(null);
+      setMembers([]);
     }
   }
 
@@ -81,7 +92,18 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, userDoc, household, loading, emailVerified, refreshHousehold, refreshEmailVerification }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        userDoc,
+        household,
+        members,
+        loading,
+        emailVerified,
+        refreshHousehold,
+        refreshEmailVerification
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

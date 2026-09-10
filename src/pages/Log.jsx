@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useDog } from '../hooks/useDog.js';
+import { useDog } from '../contexts/DogContext.jsx';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { logCareEvent, getEventsForDog } from '../db/careEvents.js';
 import { calculateDailyFood } from '../utils/food.js';

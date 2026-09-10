@@ -37,6 +37,8 @@ import ConfirmCare from './pages/ConfirmCare.jsx';
 import SettingsCareTargets from './pages/SettingsCareTargets.jsx';
 import History from './pages/History.jsx';
 
+import AppLoader from './components/AppLoader.jsx';
+
 const NAV_ITEMS = [
   { to: '/', end: true, icon: '🏠', label: 'Home' },
   { to: '/profile', icon: '👤', label: 'Profile' },
@@ -155,7 +157,10 @@ function App() {
 
   const isSwipePage = SWIPE_ROUTES.includes(location.pathname);
 
-  if (authLoading) return <p>Loading...</p>;
+  if (authLoading) {
+    return <AppLoader />;
+  }
+  
   if (!user) return <Login />;
 
   if (!emailVerified) {

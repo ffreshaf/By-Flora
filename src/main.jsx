@@ -4,6 +4,7 @@ import * as Sentry from '@sentry/capacitor'
 import * as SentryReact from '@sentry/react'
 import './index.css'
 import { AuthProvider } from './contexts/AuthContext.jsx'
+import { DogProvider } from './contexts/DogContext.jsx'
 import App from './App.jsx'
 
 Sentry.init(
@@ -16,7 +17,9 @@ Sentry.init(
 createRoot(document.getElementById('root')).render(
   <BrowserRouter>
     <AuthProvider>
-      <App />
+      <DogProvider>
+        <App />
+      </DogProvider>
     </AuthProvider>
   </BrowserRouter>,
 )

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useDog } from '../hooks/useDog.js';
+import { useDog } from '../contexts/DogContext.jsx';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { updateDog } from '../db/dogs.js';
 import { PLAY_TARGET } from '../utils/reminders.js';

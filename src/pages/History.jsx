@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useDog } from '../hooks/useDog.js';
+import { useDog } from '../contexts/DogContext.jsx';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { getEventsForDog } from '../db/careEvents.js';
 import { HYGIENE_TYPES } from '../utils/hygiene.js';

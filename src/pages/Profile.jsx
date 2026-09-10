@@ -1,28 +1,21 @@
 import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { useDog } from '../hooks/useDog.js';
+import { useDog } from '../contexts/DogContext.jsx';
 import { useAuth } from '../contexts/AuthContext.jsx';
-import { getHouseholdMembers } from '../db/households.js';
 import CareRing from '../components/CareRing.jsx';
 import { calculateDailyFood } from '../utils/food.js';
 import { calculateExerciseMinutes } from '../utils/exercise.js';
 import './Home.css';
 
+import HomeSkeleton from '../components/HomeSkeleton.jsx';
+
 function Profile() {
   const { dog, allDogs, loading, switchDog } = useDog();
-  const { user, household } = useAuth();
-  const [members, setMembers] = useState([]);
+  const { user, household, members } = useAuth();
 
-  useEffect(() => {
-    if (household) loadMembers();
-  }, [household?.id]);
-
-  async function loadMembers() {
-    const list = await getHouseholdMembers(household.id);
-    setMembers(list);
+  if (loading) {
+    return <HomeSkeleton />;
   }
-
-  if (loading) return <p>Loading...</p>;
 
   if (!dog) {
     return (
