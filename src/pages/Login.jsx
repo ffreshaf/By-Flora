@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import {
   signInWithEmail,
@@ -14,6 +15,7 @@ import './Auth.css';
 
 function Login({ verificationOnly = false }) {
   const { emailVerified, refreshEmailVerification } = useAuth();
+  const navigate = useNavigate();
 
   const [mode, setMode] = useState('signin');
   const [name, setName] = useState('');
@@ -42,6 +44,7 @@ function Login({ verificationOnly = false }) {
         message={verificationMessage}
         setMessage={setVerificationMessage}
         refreshEmailVerification={refreshEmailVerification}
+        navigate={navigate}
         onBackToSignIn={() => {
           setError('');
           setVerificationMessage('');
@@ -76,6 +79,7 @@ function Login({ verificationOnly = false }) {
         setEmail(user.email || email.trim());
       } else {
         await signInWithEmail(email.trim(), password);
+        navigate('/', { replace: true });
       }
     } catch (err) {
       setError(friendlyAuthError(err));
@@ -90,6 +94,7 @@ function Login({ verificationOnly = false }) {
 
     try {
       await signInWithGoogle();
+      navigate('/', { replace: true });
     } catch (err) {
       setError(friendlyAuthError(err));
     } finally {
@@ -362,9 +367,10 @@ function VerificationScreen({
   message,
   setMessage,
   refreshEmailVerification,
+  navigate,
   onBackToSignIn
 }) {
-  
+
   async function handleCheckVerification() {
     setError('');
     setMessage('');
@@ -374,6 +380,7 @@ function VerificationScreen({
       const verified = await refreshEmailVerification();
 
       if (verified) {
+        navigate('/', { replace: true });
         return;
       }
 

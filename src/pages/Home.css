@@ -348,61 +348,6 @@ main > .care-card:first-child {
   border-color: var(--gold);
 }
 
-.about-section {
-  max-width: 520px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.about-box {
-  background: var(--blush);
-  border-radius: var(--radius);
-  padding: 14px 16px;
-  box-shadow: 0 2px 10px rgba(43, 79, 69, 0.05);
-}
-
-.about-title {
-  font-size: 1rem;
-  margin: 0 0 8px;
-  color: var(--pine);
-}
-
-.about-subtitle {
-  font-size: 0.82rem;
-  margin: 0 0 8px;
-  color: var(--pine);
-}
-
-.about-text {
-  font-size: 0.72rem;
-  line-height: 1.5;
-  color: var(--ink);
-  margin: 0 0 8px;
-}
-
-.about-text:last-child {
-  margin-bottom: 0;
-}
-
-.about-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.about-list li {
-  font-size: 0.72rem;
-  padding: 5px 0;
-  border-bottom: 1px solid rgba(138, 154, 135, 0.2);
-  color: var(--ink);
-}
-
-.about-list li:last-child {
-  border-bottom: none;
-}
-
 .dog-switcher {
   display: flex;
   flex-wrap: wrap;
@@ -1450,4 +1395,223 @@ main > .care-card:first-child {
   text-align: right;
   margin-top: -4px;
   margin-bottom: 4px;
+}
+
+/* --------------------------------
+   ABOUT
+-------------------------------- */
+
+.about-section {
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 0 18px 110px;
+}
+
+.about-box {
+  margin-bottom: 16px;
+  padding: 22px;
+  border-radius: 22px;
+  background: var(--card-bg, #ffffff);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.035);
+}
+
+.description-box {
+  padding: 28px 22px;
+}
+
+.about-eyebrow {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  opacity: 0.5;
+}
+
+.about-title {
+  margin: 0 0 18px;
+  font-size: 30px;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+}
+
+.about-text {
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 1.65;
+  opacity: 0.72;
+}
+
+.about-text:last-child {
+  margin-bottom: 0;
+}
+
+.about-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.about-subtitle {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+
+/* --------------------------------
+   FEATURES
+-------------------------------- */
+
+.about-feature-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.about-feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 4px;
+}
+
+.about-feature + .about-feature {
+  border-top: 1px solid rgba(0, 0, 0, 0.055);
+}
+
+.about-feature-icon {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  background: rgba(0, 0, 0, 0.035);
+  font-size: 17px;
+}
+
+.about-feature strong {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 14px;
+}
+
+.about-feature p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  opacity: 0.62;
+}
+
+
+/* --------------------------------
+   TECHNOLOGY
+-------------------------------- */
+
+.about-tech-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.about-tech-tags span {
+  padding: 8px 11px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.045);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.about-tech-note {
+  margin-top: 16px;
+}
+
+
+/* --------------------------------
+   HOW IT WORKS
+-------------------------------- */
+
+.about-flow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.about-flow-item {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  column-gap: 12px;
+  align-items: center;
+  padding: 14px;
+  border-radius: 15px;
+  background: rgba(0, 0, 0, 0.035);
+}
+
+.about-flow-icon {
+  grid-row: span 2;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  font-size: 18px;
+}
+
+.about-flow-item strong {
+  font-size: 14px;
+}
+
+.about-flow-item small {
+  margin-top: 2px;
+  font-size: 12px;
+  line-height: 1.4;
+  opacity: 0.6;
+}
+
+.about-flow-arrow {
+  padding: 5px 0;
+  font-size: 16px;
+  opacity: 0.35;
+}
+
+
+/* --------------------------------
+   SIGNATURE
+-------------------------------- */
+
+.about-signature {
+  margin: 22px 0 0;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0.7;
+}
+
+
+/* --------------------------------
+   MOBILE
+-------------------------------- */
+
+@media (max-width: 480px) {
+  .about-section {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .about-box {
+    padding: 19px;
+    border-radius: 19px;
+  }
+
+  .description-box {
+    padding: 24px 19px;
+  }
+
+  .about-title {
+    font-size: 27px;
+  }
 }

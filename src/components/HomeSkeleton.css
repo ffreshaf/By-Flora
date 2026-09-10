@@ -1,0 +1,91 @@
+.home-skeleton {
+  animation: skeletonFadeIn 0.2s ease;
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.045) 25%,
+    rgba(0, 0, 0, 0.075) 50%,
+    rgba(0, 0, 0, 0.045) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.4s ease-in-out infinite;
+  border-radius: 12px;
+}
+
+.skeleton-greeting {
+  width: 110px;
+  height: 16px;
+  margin-bottom: 10px;
+}
+
+.skeleton-title {
+  width: 150px;
+  height: 36px;
+  margin-bottom: 10px;
+}
+
+.skeleton-subtitle {
+  width: 220px;
+  height: 18px;
+}
+
+.skeleton-ring {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  margin: 30px auto 16px;
+}
+
+.skeleton-progress {
+  width: 130px;
+  height: 16px;
+  margin: 0 auto;
+}
+
+.skeleton-heading {
+  width: 110px;
+  height: 25px;
+  margin-bottom: 18px;
+}
+
+.skeleton-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.skeleton-row {
+  height: 64px;
+}
+
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.skeleton-card {
+  height: 120px;
+}
+
+@keyframes skeletonShimmer {
+  from {
+    background-position: 200% 0;
+  }
+
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes skeletonFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}

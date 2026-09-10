@@ -1,3 +1,54 @@
+/* Remove mobile tap highlight */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Remove default focus outline */
+button,
+a,
+input,
+textarea,
+select {
+  outline: none;
+}
+
+/* Buttons and clickable elements feel pressed */ 
+button, 
+.btn, 
+.nav-fab, 
+.nav-item, 
+a[role="button"] { 
+  transition: 
+    transform 0.12s ease, 
+    opacity 0.12s ease; 
+}
+
+/* Press feedback */ 
+button:active, 
+.btn:active, 
+.nav-fab:active,
+.nav-item:active, 
+a[role="button"]:active { 
+  transform: scale(0.97); 
+  opacity: 0.85; 
+} 
+
+
+.nav-item:active, 
+.nav-fab:active { 
+  transform: scale(0.96); 
+}
+
+/* Keep keyboard accessibility */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--pine);
+  outline-offset: 2px;
+}
+
 .app-shell {
   width: 100%;
   min-height: 100dvh;
