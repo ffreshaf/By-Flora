@@ -30,7 +30,8 @@ export async function createHousehold(uid, name) {
   await setDoc(
     doc(db, 'inviteCodes', inviteCode),
     {
-      householdId: householdRef.id
+      householdId: householdRef.id,
+      householdName: name,
     }
   );
 
@@ -59,6 +60,14 @@ export async function getHouseholdMembers(householdId) {
   );
 
   return memberDocs;
+}
+
+export async function getHouseholdByInviteCode(code) {
+  const snap = await getDoc(doc(db, 'inviteCodes', code));
+  if (!snap.exists()) return null;
+
+  const { householdId, householdName } = snap.data();
+  return { id: householdId, name: householdName};
 }
 
 export async function joinHouseholdByCode(uid, code) {

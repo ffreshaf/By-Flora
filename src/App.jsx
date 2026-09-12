@@ -37,6 +37,7 @@ import ConfirmCare from './pages/ConfirmCare.jsx';
 import SettingsCareTargets from './pages/SettingsCareTargets.jsx';
 import History from './pages/History.jsx';
 import SettingsAccount from './pages/SettingsAccount.jsx';
+import JoinHousehold from './pages/JoinHousehold.jsx';
 
 import AppLoader from './components/AppLoader.jsx';
 
@@ -161,12 +162,18 @@ function App() {
   if (authLoading) {
     return <AppLoader />;
   }
+
+  const joinMatch = location.pathname.match(/^\/join\/([^/]+)$/);
+  if (joinMatch) {
+    return <JoinHousehold inviteCode={joinMatch[1]} />;
+  }
   
   if (!user) return <Login />;
 
   if (!emailVerified) {
     return <Login verificationOnly />;
   }
+  
   if (!household) return <HouseholdSetup />;
 
   return (

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { getHouseholdMembers } from '../db/households.js';
+import { Share } from '@capacitor/share';
 import './Home.css';
 
 function SettingsFamily() {
@@ -24,6 +25,19 @@ function SettingsFamily() {
     setTimeout(() => setCodeCopied(false), 2000);
   }
 
+  async function handleShareInvite() {
+    const link = `https://by-flora.web.app/join/${household.inviteCode}`;
+    try {
+      await Share.share({
+        title: `Join ${household?.name} on By Flora`,
+        text: `Join our household on By Flora to help take care of her!`,
+        url: link,
+      });
+    } catch (err) {
+      // user cancelled the share sheet — not an error worth surfacing
+    }
+  }
+
   if (!household) return <p>Loading...</p>;
 
   return (
@@ -38,6 +52,10 @@ function SettingsFamily() {
         </div>
         <button className="btn btn-secondary btn-small" onClick={handleCopyCode}>
           {codeCopied ? 'Copied!' : 'Copy code'}
+        </button>
+
+        <button className="btn btn-secondary btn-small" onClick={handleShareInvite}>
+          Share invite link
         </button>
       </div>
 
