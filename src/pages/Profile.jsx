@@ -35,6 +35,10 @@ function Profile() {
   return (
     <div className="home-page">
 
+      <Link to="/settings" className="settings-fab" aria-label="Settings">
+        ⚙️
+      </Link>
+
       {/* HERO — identity */}
       <section className="home-hero">
         {allDogs.length > 1 && (
@@ -98,8 +102,6 @@ function Profile() {
           </div>
         </section>
       )}
-
-      <Link to="/settings" className="btn btn-primary log-btn">⚙️ Settings</Link>
 
     </div>
   );

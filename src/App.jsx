@@ -36,6 +36,7 @@ import SettingsReminderTimes from './pages/SettingsReminderTimes.jsx';
 import ConfirmCare from './pages/ConfirmCare.jsx';
 import SettingsCareTargets from './pages/SettingsCareTargets.jsx';
 import History from './pages/History.jsx';
+import SettingsAccount from './pages/SettingsAccount.jsx';
 
 import AppLoader from './components/AppLoader.jsx';
 
@@ -202,6 +203,7 @@ function App() {
             <Route path="/settings/reminders" element={<SettingsCustomReminders />} />
             <Route path="/settings/reminder-times" element={<SettingsReminderTimes />} />
             <Route path="/confirm" element={<ConfirmCare />} />
+            <Route path="/settings/account" element={<SettingsAccount />} />
           </Routes>
         </div>
       </main>

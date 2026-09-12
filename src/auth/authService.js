@@ -6,9 +6,13 @@ import {
   GoogleAuthProvider,
   signInWithCredential,
   signOut,
-  updateProfile
+  updateProfile,
+  verifyBeforeUpdateEmail,
+  updatePassword,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
 } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import { db, auth } from '../firebase.js';
 
@@ -96,4 +100,40 @@ async function ensureUserDoc(user, displayName) {
       householdId: null
     });
   }
+}
+
+async function reauthenticate(currentPassword) {
+  const user = auth.currentUser;
+  if (!user) throw new Error('No signed-in user.');
+
+  const credential = EmailAuthProvider.credential(user.email, currentPassword);
+  await reauthenticateWithCredential(user, credential);
+}
+
+export async function updateNickname(nickname) {
+  if (!auth.currentUser) throw new Error('No signed-in user.');
+
+  await updateProfile(auth.currentUser, { displayName: nickname });
+
+  const ref = doc(db, 'users', auth.currentUser.uid);
+  await updateDoc(ref, { name: nickname });
+}
+
+export async function requestEmailChange(newEmail, currentPassword) {
+  if (!auth.currentUser) throw new Error('No signed-in user.');
+
+  await reauthenticate(currentPassword);
+
+  // Sends a verification link to the NEW address. The email only
+  // actually changes once the user clicks that link — auth.currentUser.email
+  // stays the old address until then. Don't update Firestore's `email`
+  // field here, since it would go stale until the user verifies.
+  await verifyBeforeUpdateEmail(auth.currentUser, newEmail);
+}
+
+export async function updateUserPassword(currentPassword, newPassword) {
+  if (!auth.currentUser) throw new Error('No signed-in user.');
+
+  await reauthenticate(currentPassword);
+  await updatePassword(auth.currentUser, newPassword);
 }

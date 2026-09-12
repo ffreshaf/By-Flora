@@ -16,6 +16,15 @@ function Settings() {
       <h2>Settings</h2>
 
       <div className="settings-nav-list">
+        <Link to="/settings/account" className="settings-nav-item">
+          <span className="settings-nav-icon">👤</span>
+          <span className="settings-nav-text">
+            <strong>Account</strong>
+            <span>Nickname, email & password</span>
+          </span>
+          <span className="settings-nav-chevron">›</span>
+        </Link>
+
         <Link to="/settings/family" className="settings-nav-item">
           <span className="settings-nav-icon">🏡</span>
           <span className="settings-nav-text">
