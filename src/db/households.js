@@ -108,3 +108,11 @@ export async function getMyUserDoc(uid) {
   const snap = await getDoc(doc(db, 'users', uid));
   return snap.exists() ? snap.data() : null;
 }
+
+export async function setPendingInviteCode(uid, code) {
+  await setDoc(doc(db, 'users', uid), { pendingInviteCode: code }, { merge: true });
+}
+
+export async function clearPendingInviteCode(uid) {
+  await setDoc(doc(db, 'users', uid), { pendingInviteCode: null }, { merge: true });
+}
