@@ -1,14 +1,16 @@
 import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext.jsx';
-import { getHouseholdMembers } from '../db/households.js';
+import { getHouseholdMembers, leaveHousehold } from '../db/households.js';
 import { Share } from '@capacitor/share';
 import './Home.css';
 
 function SettingsFamily() {
-  const { user, household } = useAuth();
+  const { user, household, refreshHousehold } = useAuth();
   const [members, setMembers] = useState([]);
   const [codeCopied, setCodeCopied] = useState(false);
+  const [leaving, setLeaving] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (household) loadMembers();
@@ -35,6 +37,33 @@ function SettingsFamily() {
       });
     } catch (err) {
       // user cancelled the share sheet — not an error worth surfacing
+    }
+  }
+
+  async function handleLeaveHousehold() {
+    if (!household) return;
+
+    const isLastMember = members.length === 1;
+
+    const message = isLastMember
+      ? `You're the only member of ${household.name}.\n\nLeaving will permanently delete this household, its dogs, care history, reminders and settings.\n\nThis cannot be undone.`
+      : `Leave ${household.name}?\n\nYou'll leave this household, but your account will remain. The dogs and care history will stay for the other members.`;
+
+    if (!window.confirm(message)) {
+      return;
+    }
+
+    setError('');
+    setLeaving(true);
+
+    try {
+      await leaveHousehold();
+
+      await refreshHousehold();
+    } catch (err) {
+      setError(err.message || 'Could not leave household.');
+    } finally {
+      setLeaving(false);
     }
   }
 
@@ -69,6 +98,25 @@ function SettingsFamily() {
             </div>
           </div>
         ))}
+      </div>
+
+      {error && (<p className="form-error">{error}</p>)}
+
+      <div style={{ marginTop: 32 }}>
+        <p className="settings-section-label">Leave household</p>
+
+        <p className="care-note">
+          You'll leave this household but keep your By Flora account.
+          Other members will keep the dogs and care history.
+        </p>
+
+        <button
+          className="settings-nav-item settings-nav-danger"
+          onClick={handleLeaveHousehold}
+          disabled={leaving}
+        >
+          {leaving ? 'Leaving…' : 'Leave household'}
+        </button>
       </div>
     </div>
   );

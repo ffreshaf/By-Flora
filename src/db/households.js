@@ -116,3 +116,61 @@ export async function setPendingInviteCode(uid, code) {
 export async function clearPendingInviteCode(uid) {
   await setDoc(doc(db, 'users', uid), { pendingInviteCode: null }, { merge: true });
 }
+
+export async function leaveHousehold() {
+  const currentUser = auth.currentUser;
+
+  if (!currentUser) {
+    throw new Error('You must be signed in.');
+  }
+
+  const idToken = await currentUser.getIdToken();
+
+  const response = await fetch(
+    `${SUPABASE_URL}/functions/v1/leave-household`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${idToken}`,
+      },
+    }
+  );
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result?.error || 'Failed to leave household.');
+  }
+
+  return result;
+}
+
+export async function deleteAccount() {
+  const currentUser = auth.currentUser;
+
+  if (!currentUser) {
+    throw new Error('You must be signed in.');
+  }
+
+  const idToken = await currentUser.getIdToken();
+
+  const response = await fetch(
+    `${SUPABASE_URL}/functions/v1/delete-account`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${idToken}`,
+      },
+    }
+  );
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result?.error || 'Failed to delete account.');
+  }
+
+  return result;
+}

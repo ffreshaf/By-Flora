@@ -110,6 +110,30 @@ async function reauthenticate(currentPassword) {
   await reauthenticateWithCredential(user, credential);
 }
 
+export async function reauthenticateWithPassword(currentPassword) {
+  await reauthenticate(currentPassword);
+}
+
+export async function reauthenticateWithGoogle() {
+  const user = auth.currentUser;
+
+  if (!user) {
+    throw new Error('No signed-in user.');
+  }
+
+  const result = await FirebaseAuthentication.signInWithGoogle();
+
+  const idToken = result.credential?.idToken;
+
+  if (!idToken) {
+    throw new Error('Google sign-in did not return a valid credential.');
+  }
+
+  const credential = GoogleAuthProvider.credential(idToken);
+
+  await reauthenticateWithCredential(user, credential);
+}
+
 export async function updateNickname(nickname) {
   if (!auth.currentUser) throw new Error('No signed-in user.');
 
