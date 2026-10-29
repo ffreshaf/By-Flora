@@ -317,8 +317,8 @@ function DogForm({ initialDog, householdId, onSave }) {
           onChange={(e) => setWeightGoal(e.target.value)}
         >
           <option value="maintain">Maintain current weight</option>
-          <option value="lose">Help {p.possessive} lose weight</option>
-          <option value="gain">Help {p.possessive} gain weight</option>
+          <option value="lose">Help {p.object} lose weight</option>
+          <option value="gain">Help {p.object} gain weight</option>
         </select>
       </div>
 
