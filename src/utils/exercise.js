@@ -33,7 +33,7 @@ export function calculateExerciseMinutes(dog) {
   if (weightGoal === 'lose') {
     // Start slightly below the standard target and build up gradually rather than jumping straight in
     minutesPerDay = Math.round(minutesPerDay * 0.85);
-    note = 'Start here and build up over a few weeks as her fitness improves — low-impact activity (walks, swimming) is easiest on joints while she loses weight.';
+    note = 'Start here and build up over a few weeks as your dog´s fitness improves — low-impact activity (walks, swimming) is easiest on joints while your dog loses weight.';
   }
 
   return { minutesPerDay, sessions: null, minutesPerSession: null, note };

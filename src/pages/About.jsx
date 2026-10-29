@@ -1,8 +1,12 @@
 import { Link } from 'react-router-dom';
-
+import { useDog } from '../contexts/DogContext.jsx';
 import '../css/Home.css';
 
 function About() {
+  const { loading } = useDog();
+
+  if (loading) return null;
+
   return (
     <section className="about-section">
 
@@ -16,7 +20,7 @@ function About() {
         <p className="about-eyebrow">BY FLORA</p>
 
         <h2 className="about-title">
-          Taking care of her,
+          Dog care,
           <br />
           a little easier.
         </h2>
@@ -32,7 +36,6 @@ function About() {
         </p>
 
       </div>
-
 
       {/* WHAT IT DOES */}
       <div className="about-box">
@@ -60,7 +63,8 @@ function About() {
             <div>
               <strong>Care targets</strong>
               <p>
-                Personalised food and exercise targets based on her profile.
+                Personalised food and exercise targets tailored to each
+                dog's needs.
               </p>
             </div>
           </div>
@@ -71,7 +75,7 @@ function About() {
             <div>
               <strong>Reminders</strong>
               <p>
-                Gentle reminders to help keep her routine on track.
+                Gentle reminders to help keep every dog's routine on track.
               </p>
             </div>
           </div>
@@ -113,7 +117,6 @@ function About() {
 
       </div>
 
-
       {/* TECHNOLOGY */}
       <div className="about-box">
 
@@ -144,7 +147,6 @@ function About() {
 
       </div>
 
-
       {/* HOW IT WORKS */}
       <div className="about-box">
 
@@ -156,9 +158,9 @@ function About() {
 
           <div className="about-flow-item">
             <span className="about-flow-icon">🐶</span>
-            <strong>Her routine</strong>
+            <strong>Daily care</strong>
             <small>
-              Your dog's profile and care targets
+              Dog profiles and personalised care targets
             </small>
           </div>
 
@@ -185,7 +187,6 @@ function About() {
         </div>
 
       </div>
-
 
       {/* PROJECT */}
       <div className="about-box">

@@ -11,6 +11,7 @@ import { notifyOtherMembers } from '../utils/pushNotify.js';
 import { HYGIENE_TYPES } from '../utils/hygiene.js';
 import LogControls from '../components/LogControls.jsx';
 import { Link } from 'react-router-dom';
+import { getPronouns } from '../utils/pronouns.js';
 import './Home.css';
 
 const TABS = [
@@ -31,6 +32,7 @@ function Log() {
   const [activeActivity, setActiveActivity] = useState('walk');
   const [activeHygiene, setActiveHygiene] = useState('bath');
   const [events, setEvents] = useState([]);
+  const p = getPronouns({ sex: dog?.sex || 'male' });
 
   useEffect(() => {
     if (dog && household?.id) loadEvents();
@@ -80,7 +82,7 @@ function Log() {
   }
 
   if (loading) return <p>Loading...</p>;
-  if (!dog) return <p className="care-note">Set up her profile in Settings first.</p>;
+  if (!dog) return <p className="care-note">Set up {p.possessive} profile in Settings first.</p>;
 
   const mealEventsAll = events.filter((e) => e.type === 'feed');
   const mealEvents = mealEventsAll.slice(0, 5);

@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext.jsx';
 import { getEventsForDog } from '../db/careEvents.js';
 import { HYGIENE_TYPES } from '../utils/hygiene.js';
 import { Link } from 'react-router-dom';
+import { getPronouns } from '../utils/pronouns.js';
 import './Home.css';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -47,6 +48,8 @@ function History() {
   const { household } = useAuth();
   const [events, setEvents] = useState([]);
   const [period, setPeriod] = useState('week');
+
+  const p = getPronouns({sex: dog?.sex || 'male'});
 
   useEffect(() => {
     if (dog && household?.id) {
@@ -185,7 +188,7 @@ function History() {
         <h2>History</h2>
 
         <p className="care-note">
-          Set up her profile first to start tracking her history.
+          Set up {p.possessive} profile first to start tracking {p.possessive} history.
         </p>
 
         <Link to="/settings" className="btn btn-primary">
@@ -344,7 +347,7 @@ function History() {
 
         {recentGroups.length === 0 ? (
           <p className="history-empty">
-            Nothing logged yet. Her history will appear here.
+            Nothing logged yet. {p.possessive} history will appear here.
           </p>
         ) : (
           <div className="history-groups">

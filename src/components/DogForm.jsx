@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { auth } from '../firebase.js';
+import { getPronouns } from '../utils/pronouns.js';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
@@ -63,7 +64,8 @@ function DogForm({ initialDog, householdId, onSave }) {
   const [kcalPer100g, setKcalPer100g] = useState(initialDog?.kcalPer100g || 350);
   const [weightGoal, setWeightGoal] = useState(initialDog?.weightGoal || 'maintain');
   const [targetWeightKg, setTargetWeightKg] = useState(initialDog?.targetWeightKg || '');
-
+  const [sex, setSex] = useState(initialDog?.sex || 'female');
+  const p = getPronouns({ sex });
   const [error, setError] = useState('');
   const [photoError, setPhotoError] = useState('');
 
@@ -170,6 +172,7 @@ function DogForm({ initialDog, householdId, onSave }) {
     onSave({
       name: name.trim(),
       breed: breed.trim(),
+      sex,
       photo,
       photoPath,
       ageMonths: totalAgeMonths,
@@ -221,7 +224,7 @@ function DogForm({ initialDog, householdId, onSave }) {
           )}
 
           <small>
-            Add a photo so you can recognise her profile quickly.
+            Add a photo so you can recognise {p.possessive} profile quickly.
           </small>
 
           {photoError && (
@@ -241,6 +244,14 @@ function DogForm({ initialDog, householdId, onSave }) {
           onChange={(e) => setName(e.target.value)}
           placeholder="e.g. Luna"
         />
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="sex">Sex</label>
+        <select id="sex" value={sex} onChange={(e) => setSex(e.target.value)}>
+          <option value="female">Girl</option>
+          <option value="male">Boy</option>
+        </select>
       </div>
 
       <div className="form-group">
@@ -306,8 +317,8 @@ function DogForm({ initialDog, householdId, onSave }) {
           onChange={(e) => setWeightGoal(e.target.value)}
         >
           <option value="maintain">Maintain current weight</option>
-          <option value="lose">Help her lose weight</option>
-          <option value="gain">Help her gain weight</option>
+          <option value="lose">Help {p.possessive} lose weight</option>
+          <option value="gain">Help {p.possessive} gain weight</option>
         </select>
       </div>
 
@@ -368,7 +379,7 @@ function DogForm({ initialDog, householdId, onSave }) {
           placeholder="e.g. 350"
         />
         <small>
-          Check your dog food bag — usually listed as kcal/100g or kcal/cup.
+          Check your dog's food bag — usually listed as kcal/100g or kcal/cup.
         </small>
       </div>
 

@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext.jsx';
 import CareRing from '../components/CareRing.jsx';
 import { calculateDailyFood } from '../utils/food.js';
 import { calculateExerciseMinutes } from '../utils/exercise.js';
+import { getPronouns } from '../utils/pronouns.js';
 import './Home.css';
 
 import HomeSkeleton from '../components/HomeSkeleton.jsx';
@@ -12,6 +13,8 @@ import HomeSkeleton from '../components/HomeSkeleton.jsx';
 function Profile() {
   const { dog, allDogs, loading, switchDog } = useDog();
   const { user, household, members } = useAuth();
+
+  const p = getPronouns({sex: dog?.sex || 'male'});
 
   if (loading) {
     return <HomeSkeleton />;
@@ -72,7 +75,9 @@ function Profile() {
         </div>
 
         <ul className="stat-list home-stats">
+
           {dog.breed && <li>Breed <span>{dog.breed}</span></li>}
+          <li>Sex <span>{dog.sex === 'male' ? 'Boy' : 'Girl'}</span></li>
           <li>Age <span>{dog.ageMonths} mo</span></li>
           <li>Weight <span>{dog.weightKg} kg</span></li>
           <li>Size <span>{dog.size}</span></li>

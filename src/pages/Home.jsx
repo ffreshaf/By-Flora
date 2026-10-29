@@ -9,7 +9,7 @@ import CareRing from '../components/CareRing.jsx';
 
 import { calculateDailyFood } from '../utils/food.js';
 import { calculateExerciseMinutes } from '../utils/exercise.js';
-
+import { getPronouns } from '../utils/pronouns.js';
 import './Home.css';
 
 import { useAuth } from '../contexts/AuthContext.jsx';
@@ -20,6 +20,8 @@ function Home() {
   const { dog, allDogs, loading, switchDog } = useDog();
   const { household } = useAuth();
   const [events, setEvents] = useState([]);
+
+  const p = getPronouns(dog);
 
   useEffect(() => {
     if (dog && household?.id) {
@@ -40,10 +42,10 @@ function Home() {
     return (
       <div className="care-card welcome-card">
         <h2>Welcome! 🐾</h2>
-        <p>Let's set up her profile first.</p>
+        <p>Let's set up {p.possessive} profile first.</p>
 
         <Link to="/settings" className="btn btn-primary">
-          Set up her profile
+          Set up {p.possessive} profile
         </Link>
       </div>
     );
@@ -172,7 +174,7 @@ function Home() {
         <h1>{dog.name}</h1>
 
         <p className="home-subtitle">
-          Here's how she's doing today
+          Here's how {p.subject}'s doing today
         </p>
 
         <CareRing
@@ -275,7 +277,7 @@ function Home() {
       <section className="home-section">
 
         <div className="home-section-heading">
-          <h2>Her daily plan</h2>
+          <h2>{p.Possessive} daily plan</h2>
         </div>
 
         <div className="plan-grid">

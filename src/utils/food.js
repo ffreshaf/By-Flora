@@ -33,11 +33,11 @@ export function calculateDailyFood(dog) {
   } else if (weightGoal === 'lose') {
     factor = WEIGHT_LOSS_FACTOR;
     goalNote = targetWeightKg
-      ? `Calculated for a target of ${targetWeightKg}kg. Weigh her every 2 weeks and ask your vet to confirm pace.`
+      ? `Calculated for a target of ${targetWeightKg}kg. Weigh your dog every 2 weeks and ask your vet to confirm pace.`
       : 'Using a conservative weight-loss factor. A vet-confirmed target weight will make this more accurate.';
   } else if (weightGoal === 'gain') {
     factor = WEIGHT_GAIN_FACTOR;
-    goalNote = 'Higher-calorie target to support healthy weight gain — recheck her weight in a few weeks.';
+    goalNote = 'Higher-calorie target to support healthy weight gain — recheck your dog´s weight in a few weeks.';
   } else {
     factor = ADULT_FACTORS[activityLevel] ?? ADULT_FACTORS.moderate;
   }
